@@ -23,7 +23,12 @@ const RATIOS: { value: AspectRatio; label: string }[] = [
   { value: '16:9', label: 'YouTube' },
 ];
 
-const PLATFORMS: Platform[] = ['TikTok', 'Reels', 'Shorts', 'Twitter'];
+const PLATFORMS: { id: Platform; url: string }[] = [
+  { id: 'TikTok',  url: 'https://www.tiktok.com/upload' },
+  { id: 'Reels',   url: 'https://www.instagram.com/reels/create/' },
+  { id: 'Shorts',  url: 'https://studio.youtube.com/channel/CHANNEL_ID/videos/upload' },
+  { id: 'Twitter', url: 'https://twitter.com/intent/tweet' },
+];
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div
@@ -182,27 +187,53 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       <section>
         <SectionLabel>Platform</SectionLabel>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-          {PLATFORMS.map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onPlatformChange(p)}
-              style={{
-                padding: '8px 0',
-                borderRadius: 8,
-                border: `1px solid ${settings.platform === p ? 'var(--accent3)' : 'var(--border)'}`,
-                background: settings.platform === p ? 'rgba(92,244,252,0.08)' : 'transparent',
-                color: settings.platform === p ? 'var(--accent3)' : 'var(--text-muted)',
-                fontSize: 12,
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-                textAlign: 'center',
-                transition: 'all 0.15s',
-              }}
-            >
-              {p}
-            </button>
-          ))}
+          {PLATFORMS.map(({ id, url }) => {
+            const active = settings.platform === id;
+            return (
+              <div key={id} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => onPlatformChange(id)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 24px 8px 0',
+                    borderRadius: 8,
+                    border: `1px solid ${active ? 'var(--accent3)' : 'var(--border)'}`,
+                    background: active ? 'rgba(92,244,252,0.08)' : 'transparent',
+                    color: active ? 'var(--accent3)' : 'var(--text-muted)',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-body)',
+                    textAlign: 'center',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {id}
+                </button>
+                {/* External link icon */}
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`Open ${id}`}
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    right: 6,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: active ? 'var(--accent3)' : 'var(--text-faint)',
+                    lineHeight: 1,
+                    fontSize: 10,
+                    textDecoration: 'none',
+                    opacity: 0.7,
+                  }}
+                >
+                  ↗
+                </a>
+              </div>
+            );
+          })}
         </div>
       </section>
     </aside>
