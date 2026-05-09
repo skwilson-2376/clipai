@@ -36,16 +36,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
   const [elapsed, setElapsed]         = useState(0);
   const [permDenied, setPermDenied]   = useState(false);
 
+  const previewUrlRef   = useRef('');
+  const cameraStateRef  = useRef<CameraState>('idle');
+  previewUrlRef.current  = previewUrl;
+  cameraStateRef.current = cameraState;
+
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
   }, []);
 
+  // Unmount-only cleanup — revoke blob only if user never adopted it
   useEffect(() => () => {
     stopStream();
     if (timerRef.current) clearInterval(timerRef.current);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-  }, [stopStream, previewUrl]);
+    if (cameraStateRef.current === 'preview' && previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+  }, [stopStream]);
 
   // Check camera permission on mount and watch for changes
   useEffect(() => {
