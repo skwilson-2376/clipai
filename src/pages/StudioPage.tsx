@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { Navbar }          from '../components/layout/Navbar';
 import { LeftSidebar }     from '../components/sidebar/LeftSidebar';
@@ -135,6 +135,17 @@ export default function StudioPage() {
 
   const { generations, isGenerating, addGeneration, deleteGeneration } = useGenerations();
   const { characters, addCharacter, removeCharacter }                  = useCharacters();
+
+  const autoPostedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const justDone = generations.find(
+      g => g.status === 'done' && !autoPostedRef.current.has(g.id)
+    );
+    if (justDone) {
+      autoPostedRef.current.add(justDone.id);
+      setSharingGeneration(justDone);
+    }
+  }, [generations]);
 
   const handleGenerate = (prompt: string, story?: FilmStory) => {
     addGeneration(prompt, settings, story, undefined);
