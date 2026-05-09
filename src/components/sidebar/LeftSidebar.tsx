@@ -8,6 +8,7 @@ interface LeftSidebarProps {
   onRatioChange: (ratio: AspectRatio) => void;
   onPlatformChange: (platform: Platform) => void;
   onDurationChange: (duration: number) => void;
+  mobile?: boolean;
 }
 
 const STYLES: { id: VideoStyle; label: string; sub: string; emoji: string; gradient: string }[] = [
@@ -47,13 +48,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onRatioChange,
   onPlatformChange,
   onDurationChange,
+  mobile = false,
 }) => {
   return (
     <aside
       style={{
-        width: 'var(--sidebar-width)',
+        width: mobile ? '100%' : 'var(--sidebar-width)',
         background: 'var(--surface)',
-        borderRight: '1px solid var(--border)',
+        borderRight: mobile ? 'none' : '1px solid var(--border)',
         padding: '20px 14px',
         display: 'flex',
         flexDirection: 'column',

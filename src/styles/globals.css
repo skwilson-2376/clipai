@@ -45,6 +45,7 @@
   --sidebar-width:       260px;
   --sidebar-right-width: 280px;
   --nav-height:          56px;
+  --bottom-nav-height:   60px;
 }
 
 html, body, #root {

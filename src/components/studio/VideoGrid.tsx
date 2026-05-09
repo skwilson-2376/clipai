@@ -152,7 +152,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
   gap: 14,
 };
 

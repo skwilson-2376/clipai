@@ -6,11 +6,13 @@ const NAV_LINKS = ['Studio', 'Library', 'Templates', 'Pricing'] as const;
 interface NavbarProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  mobile?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab = 'Studio',
   onTabChange,
+  mobile = false,
 }) => {
   return (
     <nav
@@ -53,30 +55,32 @@ export const Navbar: React.FC<NavbarProps> = ({
         <span style={{ color: 'var(--accent3)' }}>AI</span>
       </div>
 
-      {/* Nav links */}
-      <ul style={{ display: 'flex', listStyle: 'none', gap: 4, flex: 1 }}>
-        {NAV_LINKS.map(link => (
-          <li key={link}>
-            <button
-              type="button"
-              onClick={() => onTabChange?.(link)}
-              style={{
-                fontSize: 13,
-                color: activeTab === link ? 'var(--text)' : 'var(--text-muted)',
-                background: activeTab === link ? 'var(--surface2)' : 'transparent',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-                transition: 'color 0.15s, background 0.15s',
-              }}
-            >
-              {link}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Nav links — hidden on mobile */}
+      {!mobile && (
+        <ul style={{ display: 'flex', listStyle: 'none', gap: 4, flex: 1 }}>
+          {NAV_LINKS.map(link => (
+            <li key={link}>
+              <button
+                type="button"
+                onClick={() => onTabChange?.(link)}
+                style={{
+                  fontSize: 13,
+                  color: activeTab === link ? 'var(--text)' : 'var(--text-muted)',
+                  background: activeTab === link ? 'var(--surface2)' : 'transparent',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  transition: 'color 0.15s, background 0.15s',
+                }}
+              >
+                {link}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Right actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
@@ -94,8 +98,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           Beta
         </span>
-        <Button variant="ghost" size="sm">Log in</Button>
-        <Button variant="primary" size="sm">Sign up free</Button>
+        {mobile ? (
+          <Button variant="primary" size="sm">Sign up</Button>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm">Log in</Button>
+            <Button variant="primary" size="sm">Sign up free</Button>
+          </>
+        )}
       </div>
     </nav>
   );

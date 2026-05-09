@@ -12,6 +12,7 @@ interface RightSidebarProps {
   onCreativityChange: (val: number) => void;
   generations: VideoGeneration[];
   plan: UserPlan;
+  mobile?: boolean;
 }
 
 const RESOLUTIONS: Resolution[] = ['720p', '1080p', '4K', 'Auto'];
@@ -72,6 +73,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   onCreativityChange,
   generations,
   plan,
+  mobile = false,
 }) => {
   const creditsLeft = plan.creditsTotal - plan.creditsUsed;
   const creditsPct  = (plan.creditsUsed / plan.creditsTotal) * 100;
@@ -79,9 +81,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   return (
     <aside
       style={{
-        width: 'var(--sidebar-right-width)',
+        width: mobile ? '100%' : 'var(--sidebar-right-width)',
         background: 'var(--surface)',
-        borderLeft: '1px solid var(--border)',
+        borderLeft: mobile ? 'none' : '1px solid var(--border)',
         padding: '20px 16px',
         display: 'flex',
         flexDirection: 'column',
