@@ -12,7 +12,7 @@ axum          = "0.7"
 tokio         = { version = "1",   features = ["full"] }
 serde         = { version = "1",   features = ["derive"] }
 serde_json    = "1"
-sqlx          = { version = "0.7", features = ["runtime-tokio-rustls", "mysql"] }
+sqlx          = { version = "0.7", features = ["runtime-tokio-rustls", "mysql", "chrono"] }
 uuid          = { version = "1",   features = ["v4"] }
 dotenvy       = "0.15"
 tower-http    = { version = "0.5", features = ["cors", "trace", "compression-gzip"] }
@@ -23,3 +23,8 @@ futures-util  = "0.3"
 anyhow        = "1"
 rand          = "0.8"
 thiserror     = "1"
+reqwest       = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+sha2          = "0.10"
+base64        = "0.22"
+urlencoding   = "2"
+chrono        = { version = "0.4", features = ["serde"] }

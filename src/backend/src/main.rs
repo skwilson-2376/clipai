@@ -1,22 +1,45 @@
 use axum::{
+    extract::FromRef,
     routing::{delete, get, post},
     Json, Router,
 };
 use serde_json::json;
 use sqlx::mysql::MySqlPoolOptions;
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr, sync::Arc};
+use tokio::sync::Mutex;
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
 
 mod error;
 mod models;
 mod routes;
 
+// ── Shared state ──────────────────────────────────────────────────────────────
+
+#[derive(Clone)]
+pub struct OAuthEntry {
+    pub platform: String,
+    pub verifier: Option<String>, // PKCE code_verifier (Twitter)
+}
+
+#[derive(Clone)]
+pub struct AppState {
+    pub pool:         sqlx::MySqlPool,
+    pub oauth_states: Arc<Mutex<HashMap<String, OAuthEntry>>>,
+}
+
+// Lets existing handlers that use State<MySqlPool> keep working unchanged
+impl FromRef<AppState> for sqlx::MySqlPool {
+    fn from_ref(state: &AppState) -> Self {
+        state.pool.clone()
+    }
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Load .env file (ignored if missing in production)
     dotenvy::dotenv().ok();
 
-    // Structured logging
     tracing_subscriber::fmt()
         .with_env_filter(
             std::env::var("RUST_LOG")
@@ -24,11 +47,9 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL env var must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     tracing::info!("Connecting to database…");
-
     let pool = MySqlPoolOptions::new()
         .max_connections(20)
         .min_connections(2)
@@ -36,26 +57,35 @@ async fn main() -> anyhow::Result<()> {
         .connect(&database_url)
         .await?;
 
-    // Run migrations automatically on startup
     tracing::info!("Running migrations…");
     sqlx::migrate!("./migrations").run(&pool).await?;
     tracing::info!("Migrations complete.");
 
-    // CORS — allow the Vite dev server and any production origin
+    let state = AppState {
+        pool,
+        oauth_states: Arc::new(Mutex::new(HashMap::new())),
+    };
+
     let cors = CorsLayer::permissive();
 
     let app = Router::new()
         // Health
         .route("/health", get(health))
-        // Generations
+        // Video generation
         .route("/api/generate",       post(routes::generate::create))
         .route("/api/generations",    get(routes::generate::list))
-        // SSE status stream
+        // SSE status
         .route("/api/status/:id",     get(routes::status::stream))
         // Characters
         .route("/api/characters",     get(routes::characters::list).post(routes::characters::create))
         .route("/api/characters/:id", delete(routes::characters::delete))
-        .with_state(pool)
+        // Social connections
+        .route("/api/connections",            get(routes::connections::list))
+        .route("/api/connections/:platform",  delete(routes::connections::disconnect))
+        // OAuth flows
+        .route("/api/oauth/:platform/start",    get(routes::oauth::start))
+        .route("/api/oauth/:platform/callback", get(routes::oauth::callback))
+        .with_state(state)
         .layer(cors)
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http());
