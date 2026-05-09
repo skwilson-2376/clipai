@@ -2,6 +2,19 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { FilmStory, VideoGeneration, GenerationSettings } from '../types';
 import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
 
+const STORAGE_KEY = 'clipai_generations';
+
+function loadFromStorage(): VideoGeneration[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as (Omit<VideoGeneration, 'createdAt'> & { createdAt: string })[];
+      return parsed.map(g => ({ ...g, createdAt: new Date(g.createdAt) }));
+    }
+  } catch { /* fall through to seed */ }
+  return SEED_GENERATIONS;
+}
+
 const SEED_GENERATIONS: VideoGeneration[] = [
   {
     id: '1',
@@ -62,7 +75,7 @@ const SEED_GENERATIONS: VideoGeneration[] = [
 ];
 
 export function useGenerations() {
-  const [generations, setGenerations] = useState<VideoGeneration[]>(SEED_GENERATIONS);
+  const [generations, setGenerations] = useState<VideoGeneration[]>(loadFromStorage);
   const [isGenerating, setIsGenerating] = useState(false);
   const mountedRef = useRef(true);
   const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
@@ -71,6 +84,10 @@ export function useGenerations() {
     mountedRef.current = false;
     eventSourcesRef.current.forEach(es => es.close());
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(generations));
+  }, [generations]);
 
   const addGeneration = useCallback(
     async (
