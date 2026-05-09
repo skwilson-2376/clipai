@@ -85,6 +85,8 @@ async fn main() -> anyhow::Result<()> {
         // OAuth flows
         .route("/api/oauth/:platform/start",    get(routes::oauth::start))
         .route("/api/oauth/:platform/callback", get(routes::oauth::callback))
+        // Sign-up logs
+        .route("/api/logs", post(routes::logs::create).get(routes::logs::list))
         .with_state(state)
         .layer(cors)
         .layer(CompressionLayer::new())
@@ -99,7 +101,7 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("ClipAI backend listening on http://{addr}");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }

@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { label: 'Library',   path: '/library'   },
   { label: 'Templates', path: '/templates' },
   { label: 'Pricing',   path: '/pricing'   },
+  { label: 'Logs',      path: '/logs'      },
 ] as const;
 
 interface NavbarProps {

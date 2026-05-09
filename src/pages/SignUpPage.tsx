@@ -11,11 +11,20 @@ export default function SignUpPage() {
 
   const valid = name.trim() && email.trim() && password.length >= 8 && agreed;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); navigate('/studio'); }, 1400);
+    try {
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, plan: 'free' }),
+      });
+    } catch {
+      // log failure is non-blocking
+    }
+    setTimeout(() => { setLoading(false); navigate('/studio'); }, 600);
   };
 
   return (

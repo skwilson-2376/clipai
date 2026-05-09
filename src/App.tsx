@@ -7,6 +7,7 @@ import TemplatesPage from './pages/TemplatesPage';
 import PricingPage   from './pages/PricingPage';
 import LoginPage     from './pages/LoginPage';
 import SignUpPage    from './pages/SignUpPage';
+import LogsPage      from './pages/LogsPage';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/pricing"   element={<PricingPage />} />
         <Route path="/login"     element={<LoginPage />} />
         <Route path="/signup"    element={<SignUpPage />} />
+        <Route path="/logs"      element={<LogsPage />} />
         <Route path="*"          element={<Navigate to="/studio" replace />} />
       </Routes>
     </BrowserRouter>
