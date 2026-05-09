@@ -190,48 +190,28 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           {PLATFORMS.map(({ id, url }) => {
             const active = settings.platform === id;
             return (
-              <div key={id} style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  onClick={() => onPlatformChange(id)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 24px 8px 0',
-                    borderRadius: 8,
-                    border: `1px solid ${active ? 'var(--accent3)' : 'var(--border)'}`,
-                    background: active ? 'rgba(92,244,252,0.08)' : 'transparent',
-                    color: active ? 'var(--accent3)' : 'var(--text-muted)',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
-                    textAlign: 'center',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {id}
-                </button>
-                {/* External link icon */}
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`Open ${id}`}
-                  onClick={e => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    right: 6,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: active ? 'var(--accent3)' : 'var(--text-faint)',
-                    lineHeight: 1,
-                    fontSize: 10,
-                    textDecoration: 'none',
-                    opacity: 0.7,
-                  }}
-                >
-                  ↗
-                </a>
-              </div>
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  onPlatformChange(id);
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                style={{
+                  padding: '8px 0',
+                  borderRadius: 8,
+                  border: `1px solid ${active ? 'var(--accent3)' : 'var(--border)'}`,
+                  background: active ? 'rgba(92,244,252,0.08)' : 'transparent',
+                  color: active ? 'var(--accent3)' : 'var(--text-muted)',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  textAlign: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {id}
+              </button>
             );
           })}
         </div>
