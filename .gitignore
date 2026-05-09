@@ -1,0 +1,57 @@
+# ===== Node / Frontend =====
+node_modules/
+.npm/
+/.pnp/
+.pnp.js
+
+# ===== Build Output =====
+dist/
+build/
+.build/
+.vite/
+.vscode-test/
+
+# ===== Rust / Backend =====
+**/target/
+src/backend/target/
+
+# ===== TypeScript =====
+*.tsbuildinfo
+
+# ===== Environment (secrets) =====
+.env
+.env.*
+.env.local
+!.env.example
+*.local
+
+# ===== Certificates =====
+certs/
+
+# ===== Logs =====
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Coverage =====
+coverage/
+
+# ===== Temp Files =====
+tmp/
+temp/
+.history/
+
+# ===== OS Files =====
+.DS_Store
+Thumbs.db
+
+# ===== IDEs =====
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
