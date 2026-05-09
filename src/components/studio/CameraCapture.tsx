@@ -33,6 +33,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
   const [previewUrl, setPreviewUrl]   = useState<string>('');
   const [errorMsg, setErrorMsg]       = useState('');
   const [elapsed, setElapsed]         = useState(0);
+  const [permDenied, setPermDenied]   = useState(false);
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -44,6 +45,29 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     if (timerRef.current) clearInterval(timerRef.current);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [stopStream, previewUrl]);
+
+  // Check camera permission on mount and watch for changes
+  useEffect(() => {
+    if (!navigator.permissions) return;
+    navigator.permissions.query({ name: 'camera' as PermissionName }).then(status => {
+      if (status.state === 'denied') {
+        setPermDenied(true);
+        setCameraState('error');
+        setErrorMsg('Camera access is blocked by your browser.');
+      }
+      status.onchange = () => {
+        if (status.state === 'granted') {
+          setPermDenied(false);
+          setCameraState('idle');
+          setErrorMsg('');
+        } else if (status.state === 'denied') {
+          setPermDenied(true);
+          setCameraState('error');
+          setErrorMsg('Camera access is blocked by your browser.');
+        }
+      };
+    }).catch(() => {/* Permissions API not available */});
+  }, []);
 
   // Whenever cameraState transitions to 'live', attach the stream to the video element.
   // We do it here (after render) so videoRef.current is guaranteed to be in the DOM.
@@ -212,8 +236,23 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
                 {cameraState === 'requesting' ? 'Allow camera access in your browser…' : 'Camera not started'}
               </div>
               {errorMsg && (
-                <div style={{ fontSize: 12, color: '#FC5C5C', marginTop: 8, lineHeight: 1.5, maxWidth: 280 }}>
+                <div style={{ fontSize: 12, color: '#FC5C5C', marginTop: 8, lineHeight: 1.5, maxWidth: 300 }}>
                   {errorMsg}
+                  {permDenied && (
+                    <div style={{ marginTop: 10, color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 12 }}>How to fix:</div>
+                      <div>1. Click the <strong>camera icon</strong> in your browser's address bar</div>
+                      <div>2. Select <strong>"Allow"</strong> for camera access</div>
+                      <div>3. Click <strong>Refresh</strong> below</div>
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        style={{ marginTop: 6, padding: '7px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+                      >
+                        Refresh page
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
