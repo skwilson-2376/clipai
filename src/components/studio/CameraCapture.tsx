@@ -24,10 +24,11 @@ function getSupportedMimeType(): string {
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCapture }) => {
   const videoRef    = useRef<HTMLVideoElement>(null);
   const fileRef     = useRef<HTMLInputElement>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef   = useRef<Blob[]>([]);
-  const streamRef   = useRef<MediaStream | null>(null);
-  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recorderRef  = useRef<MediaRecorder | null>(null);
+  const chunksRef    = useRef<Blob[]>([]);
+  const streamRef    = useRef<MediaStream | null>(null);
+  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mimeTypeRef  = useRef<string>('');
 
   const [cameraState, setCameraState] = useState<CameraState>('idle');
   const [previewUrl, setPreviewUrl]   = useState<string>('');
@@ -116,6 +117,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     chunksRef.current = [];
 
     const mimeType = getSupportedMimeType();
+    mimeTypeRef.current = mimeType;
     const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
 
     recorder.ondataavailable = e => {
@@ -309,6 +311,19 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="button" onClick={handleUseVideo} style={primaryBtn}>
                 ✓ Use This Video
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const ext = mimeTypeRef.current.includes('mp4') ? 'mp4' : 'webm';
+                  const a = document.createElement('a');
+                  a.href = previewUrl;
+                  a.download = `clip-${Date.now()}.${ext}`;
+                  a.click();
+                }}
+                style={ghostBtn}
+              >
+                Save to device
               </button>
               <button type="button" onClick={handleDiscard} style={ghostBtn}>
                 Discard
