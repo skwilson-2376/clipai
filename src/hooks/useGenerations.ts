@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { VideoGeneration, GenerationSettings } from '../types';
+import type { FilmStory, VideoGeneration, GenerationSettings } from '../types';
 import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
 
 const SEED_GENERATIONS: VideoGeneration[] = [
@@ -73,8 +73,30 @@ export function useGenerations() {
   }, []);
 
   const addGeneration = useCallback(
-    async (prompt: string, settings: GenerationSettings): Promise<void> => {
+    async (
+      prompt: string,
+      settings: GenerationSettings,
+      story?: FilmStory,
+      uploadedVideoUrl?: string,
+    ): Promise<void> => {
       if (!prompt.trim()) return;
+
+      // Uploaded/captured video — add directly as done, skip API
+      if (uploadedVideoUrl) {
+        const gen: VideoGeneration = {
+          id: `upload-${Date.now()}`,
+          prompt,
+          ...settings,
+          status: 'done',
+          createdAt: new Date(),
+          thumbnailGradient: THUMB_GRADIENTS[settings.style],
+          videoUrl: uploadedVideoUrl,
+          isUploaded: true,
+          story,
+        };
+        setGenerations(prev => [gen, ...prev]);
+        return;
+      }
 
       const tempId = `pending-${Date.now()}`;
       const newGen: VideoGeneration = {
@@ -84,6 +106,7 @@ export function useGenerations() {
         status: 'pending',
         createdAt: new Date(),
         thumbnailGradient: THUMB_GRADIENTS[settings.style],
+        story,
       };
 
       setIsGenerating(true);
@@ -108,12 +131,10 @@ export function useGenerations() {
 
       if (!mountedRef.current) return;
 
-      // Swap placeholder ID → real server job ID
       setGenerations(prev =>
         prev.map(g => g.id === tempId ? { ...g, id: jobId, status: 'processing' } : g)
       );
 
-      // Stream status updates via SSE
       const es = new EventSource(`/api/status/${jobId}`);
       eventSourcesRef.current.set(jobId, es);
 

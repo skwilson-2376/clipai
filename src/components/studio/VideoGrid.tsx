@@ -17,6 +17,7 @@ interface VideoGridProps {
   isGenerating: boolean;
   onDelete: (id: string) => void;
   onPlay: (gen: VideoGeneration) => void;
+  onShare: (gen: VideoGeneration) => void;
   onNewClick: () => void;
 }
 
@@ -25,6 +26,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
   isGenerating,
   onDelete,
   onPlay,
+  onShare,
   onNewClick,
 }) => {
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
@@ -110,7 +112,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
             <SectionHeader title="In Progress" />
             <div style={gridStyle}>
               {inProgress.map(gen => (
-                <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} />
+                <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} onShare={onShare} />
               ))}
             </div>
           </section>
@@ -125,7 +127,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
           />
           <div style={gridStyle}>
             {recent.map(gen => (
-              <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} />
+              <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} onShare={onShare} />
             ))}
             <NewVideoCard onClick={onNewClick} />
           </div>
