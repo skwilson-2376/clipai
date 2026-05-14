@@ -5,7 +5,7 @@ export type Resolution      = '720p' | '1080p' | '4K' | 'Auto';
 export type GenerationStatus = 'pending' | 'processing' | 'done' | 'failed';
 export type VideoFilter     = 'none' | 'cinematic' | 'vintage' | 'neon' | 'noir' | 'warm' | 'cool' | 'dramatic';
 export type CharacterSource = 'ai' | 'uploaded';
-export type GenerationMode  = 'prompt' | 'story' | 'camera';
+export type GenerationMode  = 'prompt' | 'story' | 'camera' | 'shortfilm' | 'anime' | '3dfilm';
 
 export interface Character {
   id: string;

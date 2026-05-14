@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { Navbar }          from '../components/layout/Navbar';
 import { LeftSidebar }     from '../components/sidebar/LeftSidebar';
 import { RightSidebar }    from '../components/sidebar/RightSidebar';
-import { PromptInput }     from '../components/studio/PromptInput';
-import { VideoGrid }       from '../components/studio/VideoGrid';
-import { VideoModal }      from '../components/studio/VideoModal';
-import { StoryWriter }     from '../components/studio/StoryWriter';
-import { CameraCapture }   from '../components/studio/CameraCapture';
-import { CharacterPanel }  from '../components/people/CharacterPanel';
-import { PostModal }       from '../components/studio/PostModal';
+import { PromptInput }      from '../components/studio/PromptInput';
+import { VideoGrid }        from '../components/studio/VideoGrid';
+import { VideoModal }       from '../components/studio/VideoModal';
+import { StoryWriter }      from '../components/studio/StoryWriter';
+import { CameraCapture }    from '../components/studio/CameraCapture';
+import { CharacterPanel }   from '../components/people/CharacterPanel';
+import { PostModal }        from '../components/studio/PostModal';
+import { ShortFilmCreator } from '../components/studio/ShortFilmCreator';
+import { AnimeCreator }     from '../components/studio/AnimeCreator';
+import { ThreeDCreator }    from '../components/studio/ThreeDCreator';
 
 import { useGenerationSettings } from '../hooks/useGenerationSettings';
 import { useGenerations }        from '../hooks/useGenerations';
@@ -27,10 +30,11 @@ const MOCK_PLAN: UserPlan = {
 };
 
 const DESKTOP_MODES: { id: GenerationMode | 'people'; label: string }[] = [
-  { id: 'prompt',  label: '✏️ Prompt'   },
-  { id: 'story',   label: '🎬 Story'    },
-  { id: 'camera',  label: '📷 Camera'   },
-  { id: 'people',  label: '👥 People'   },
+  { id: 'shortfilm', label: '🎬 Short Film'    },
+  { id: 'anime',     label: '✨ Anime'          },
+  { id: '3dfilm',    label: '🎮 3D Animation'  },
+  { id: 'camera',    label: '📷 Camera'        },
+  { id: 'people',    label: '👥 People'        },
 ];
 
 const MOBILE_TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
@@ -117,7 +121,7 @@ export default function StudioPage() {
   const [sharingGeneration, setSharingGeneration] = useState<VideoGeneration | null>(null);
   const [mobileTab, setMobileTab]   = useState<MobileTab>('videos');
   const [mobileMode, setMobileMode] = useState<GenerationMode>('prompt');
-  const [desktopMode, setDesktopMode] = useState<GenerationMode | 'people'>('prompt');
+  const [desktopMode, setDesktopMode] = useState<GenerationMode | 'people'>('shortfilm');
 
   const isMobile = useIsMobile();
 
@@ -260,6 +264,50 @@ export default function StudioPage() {
                 </button>
               ))}
             </div>
+            {/* Film creators — each has its own creation form + shared video grid below */}
+            {(desktopMode === 'shortfilm' || desktopMode === 'anime' || desktopMode === '3dfilm') && (
+              <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                {/* Left: creator form */}
+                <div style={{ width: 340, flexShrink: 0, borderRight: '1px solid var(--border)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  {desktopMode === 'shortfilm' && (
+                    <ShortFilmCreator
+                      settings={settings}
+                      characters={characters}
+                      isGenerating={isGenerating}
+                      onStyleChange={updateStyle}
+                      onGenerate={(p, s) => { handleGenerate(p, s); }}
+                    />
+                  )}
+                  {desktopMode === 'anime' && (
+                    <AnimeCreator
+                      settings={settings}
+                      characters={characters}
+                      isGenerating={isGenerating}
+                      onStyleChange={updateStyle}
+                      onGenerate={(p, s) => { handleGenerate(p, s); }}
+                    />
+                  )}
+                  {desktopMode === '3dfilm' && (
+                    <ThreeDCreator
+                      settings={settings}
+                      characters={characters}
+                      isGenerating={isGenerating}
+                      onStyleChange={updateStyle}
+                      onGenerate={(p, s) => { handleGenerate(p, s); }}
+                    />
+                  )}
+                </div>
+                {/* Right: video grid */}
+                <VideoGrid
+                  generations={generations}
+                  isGenerating={isGenerating}
+                  onDelete={deleteGeneration}
+                  onPlay={gen => setPlayingGeneration(gen)}
+                  onShare={gen => setSharingGeneration(gen)}
+                  onNewClick={() => {}}
+                />
+              </div>
+            )}
             {desktopMode === 'prompt' && (
               <>
                 <PromptInput
