@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Select, Tooltip } from 'antd';
+import { SyncOutlined } from '@ant-design/icons';
 import type { VideoGeneration, GenerationSettings } from '../../types';
 import { THUMB_GRADIENTS } from '../../constants/thumbnailGradients';
 
@@ -9,7 +11,6 @@ interface CameraCaptureProps {
 
 type CameraState = 'idle' | 'requesting' | 'live' | 'recording' | 'preview' | 'error';
 
-// Pick the first mimeType the browser actually supports
 function getSupportedMimeType(): string {
   const candidates = [
     'video/webm;codecs=vp9,opus',
@@ -36,6 +37,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
   const [elapsed, setElapsed]         = useState(0);
   const [permDenied, setPermDenied]   = useState(false);
 
+  // Camera selection state
+  const [devices, setDevices]               = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+
   const previewUrlRef   = useRef('');
   const cameraStateRef  = useRef<CameraState>('idle');
   previewUrlRef.current  = previewUrl;
@@ -46,7 +51,30 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     streamRef.current = null;
   }, []);
 
-  // Unmount-only cleanup — revoke blob only if user never adopted it
+  // ── Device enumeration ────────────────────────────────────────────────────
+  // Before permission is granted labels are empty strings (browser privacy).
+  // We re-enumerate after getUserMedia resolves so the dropdown shows real names.
+  const enumerateDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    try {
+      const all   = await navigator.mediaDevices.enumerateDevices();
+      const video = all.filter(d => d.kind === 'videoinput');
+      setDevices(video);
+      // Auto-select first device if nothing selected yet
+      setSelectedDeviceId(prev => (prev || video[0]?.deviceId || ''));
+    } catch {
+      // enumerate not supported — silently ignore
+    }
+  }, []);
+
+  // Initial enumerate + listen for device plug/unplug
+  useEffect(() => {
+    enumerateDevices();
+    navigator.mediaDevices?.addEventListener('devicechange', enumerateDevices);
+    return () => navigator.mediaDevices?.removeEventListener('devicechange', enumerateDevices);
+  }, [enumerateDevices]);
+
+  // Unmount cleanup
   useEffect(() => () => {
     stopStream();
     if (timerRef.current) clearInterval(timerRef.current);
@@ -55,7 +83,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     }
   }, [stopStream]);
 
-  // Check camera permission on mount and watch for changes
+  // Check camera permission on mount
   useEffect(() => {
     if (!navigator.permissions) return;
     navigator.permissions.query({ name: 'camera' as PermissionName }).then(status => {
@@ -75,62 +103,90 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
           setErrorMsg('Camera access is blocked by your browser.');
         }
       };
-    }).catch(() => {/* Permissions API not available */});
+    }).catch(() => {});
   }, []);
 
-  // Whenever cameraState transitions to 'live', attach the stream to the video element.
-  // We do it here (after render) so videoRef.current is guaranteed to be in the DOM.
+  // Attach stream to video element after cameraState → 'live'
   useEffect(() => {
     if (cameraState === 'live' && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
-      videoRef.current.play().catch(() => {/* autoplay policy — user interaction already occurred */});
+      videoRef.current.play().catch(() => {});
     }
   }, [cameraState]);
 
-  const startCamera = async () => {
+  // ── Camera start / switch ─────────────────────────────────────────────────
+  const openCamera = useCallback(async (deviceId?: string) => {
     setErrorMsg('');
-
-    // Check API availability (requires HTTPS or localhost)
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('error');
-      setErrorMsg('Camera API not available. Make sure the site is served over HTTPS or localhost.');
+      setErrorMsg('Camera API not available. The site must be served over HTTPS.');
       return;
     }
 
     setCameraState('requesting');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true,
-      });
+      const videoConstraint = deviceId
+        ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        : { facingMode: 'user',            width: { ideal: 1280 }, height: { ideal: 720 } };
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint, audio: true });
       streamRef.current = stream;
-      setCameraState('live'); // useEffect above attaches stream after render
+      // Re-enumerate now that permission is granted — labels become available
+      await enumerateDevices();
+      setCameraState('live');
     } catch (err: unknown) {
       setCameraState('error');
       const name = (err instanceof Error) ? err.name : '';
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        setErrorMsg('Camera access denied. Click the camera icon in your browser address bar to allow access.');
+        setErrorMsg('Camera access denied. Click the camera icon in your address bar to allow access.');
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
         setErrorMsg('No camera found. Plug in a webcam and try again.');
       } else if (name === 'NotReadableError') {
-        setErrorMsg('Camera is already in use by another app. Close it and try again.');
+        setErrorMsg('Camera is in use by another app. Close it and try again.');
+      } else if (name === 'OverconstrainedError') {
+        // Requested deviceId no longer valid — fall back to default
+        setErrorMsg('Selected camera is unavailable. Switching to default.');
+        setSelectedDeviceId('');
+        await openCamera(undefined);
       } else {
         setErrorMsg('Could not start camera. Try refreshing the page.');
       }
     }
+  }, [enumerateDevices]);
+
+  const startCamera = () => openCamera(selectedDeviceId || undefined);
+
+  // Switch camera while live (stops current stream, opens new one)
+  const handleDeviceChange = async (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    if (cameraState !== 'live' && cameraState !== 'recording') return;
+
+    // If recording, stop it first
+    if (cameraState === 'recording') {
+      recorderRef.current?.stop();
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    }
+    stopStream();
+    await openCamera(deviceId);
   };
 
+  // Flip between the two cameras (mobile helper)
+  const flipCamera = () => {
+    if (devices.length < 2) return;
+    const currentIdx = devices.findIndex(d => d.deviceId === selectedDeviceId);
+    const nextDevice  = devices[(currentIdx + 1) % devices.length];
+    handleDeviceChange(nextDevice.deviceId);
+  };
+
+  // ── Recording ─────────────────────────────────────────────────────────────
   const startRecording = () => {
     if (!streamRef.current) return;
     chunksRef.current = [];
-
     const mimeType = getSupportedMimeType();
     mimeTypeRef.current = mimeType;
     const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
 
-    recorder.ondataavailable = e => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
-    };
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: mimeType || 'video/webm' });
       const url  = URL.createObjectURL(blob);
@@ -139,7 +195,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
       setCameraState('preview');
     };
 
-    recorder.start(100); // collect data every 100 ms for reliability
+    recorder.start(100);
     recorderRef.current = recorder;
     setElapsed(0);
     setCameraState('recording');
@@ -151,6 +207,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   };
 
+  // ── File upload ───────────────────────────────────────────────────────────
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -158,7 +215,6 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
     setPreviewUrl(url);
     stopStream();
     setCameraState('preview');
-    // Reset input so the same file can be re-selected
     e.target.value = '';
   };
 
@@ -185,8 +241,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
   };
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-
   const isLiveState = cameraState === 'live' || cameraState === 'recording';
+
+  // Friendly label for a device
+  const deviceLabel = (d: MediaDeviceInfo, idx: number) =>
+    d.label || `Camera ${idx + 1}`;
+
+  const showDeviceSelector = devices.length > 1 && cameraState !== 'preview' && cameraState !== 'requesting';
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
@@ -198,66 +259,102 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
           Record with your camera or upload a video from your device.
         </div>
 
-        {/* Viewfinder */}
+        {/* ── Camera selector ──────────────────────────────────────────────── */}
+        {showDeviceSelector && (
+          <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Select
+              value={selectedDeviceId || undefined}
+              onChange={handleDeviceChange}
+              style={{ flex: 1 }}
+              placeholder="Select camera"
+              options={devices.map((d, i) => ({
+                value: d.deviceId,
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>📷</span>
+                    <span style={{ fontSize: 13 }}>{deviceLabel(d, i)}</span>
+                  </span>
+                ),
+              }))}
+            />
+            {/* Flip button — quick cycling through all cameras */}
+            <Tooltip title={`Switch to next camera (${devices.length} available)`}>
+              <button
+                type="button"
+                onClick={flipCamera}
+                style={{
+                  width: 36, height: 32,
+                  borderRadius: 8,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                <SyncOutlined style={{ fontSize: 14 }} />
+              </button>
+            </Tooltip>
+          </div>
+        )}
+
+        {/* ── Viewfinder ───────────────────────────────────────────────────── */}
         <div style={{
-          width: '100%',
-          aspectRatio: '4/3',
+          width: '100%', aspectRatio: '4/3',
           borderRadius: 'var(--radius-xl)',
-          background: 'var(--surface2)',
+          background: '#0e0e12',
           border: '1px solid var(--border)',
           overflow: 'hidden',
           position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           marginBottom: 16,
         }}>
-          {/* Live camera — always in DOM so videoRef is always valid */}
+          {/* Live feed */}
           <video
             ref={videoRef}
-            muted
-            playsInline
+            muted playsInline
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
+              width: '100%', height: '100%', objectFit: 'cover',
               transform: 'scaleX(-1)',
               display: isLiveState ? 'block' : 'none',
             }}
           />
 
-          {/* Recorded / uploaded preview */}
+          {/* Preview */}
           {cameraState === 'preview' && previewUrl && (
             <video
               src={previewUrl}
-              controls
-              playsInline
+              controls playsInline
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}
 
-          {/* Idle / requesting / error placeholder */}
+          {/* Idle / error placeholder */}
           {!isLiveState && cameraState !== 'preview' && (
             <div style={{ textAlign: 'center', padding: 24 }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>
                 {cameraState === 'error' ? '⚠️' : '📷'}
               </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                 {cameraState === 'requesting' ? 'Allow camera access in your browser…' : 'Camera not started'}
               </div>
               {errorMsg && (
                 <div style={{ fontSize: 12, color: '#FC5C5C', marginTop: 8, lineHeight: 1.5, maxWidth: 300 }}>
                   {errorMsg}
                   {permDenied && (
-                    <div style={{ marginTop: 10, color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 12 }}>How to fix:</div>
-                      <div>1. Click the <strong>camera icon</strong> in your browser's address bar</div>
+                    <div style={{ marginTop: 10, color: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontWeight: 600, color: '#fff', fontSize: 12 }}>How to fix:</div>
+                      <div>1. Click the <strong>camera icon</strong> in your address bar</div>
                       <div>2. Select <strong>"Allow"</strong> for camera access</div>
                       <div>3. Click <strong>Refresh</strong> below</div>
                       <button
                         type="button"
                         onClick={() => window.location.reload()}
-                        style={{ marginTop: 6, padding: '7px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+                        style={{ marginTop: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
                       >
                         Refresh page
                       </button>
@@ -270,18 +367,37 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
 
           {/* Recording badge */}
           {cameraState === 'recording' && (
-            <div style={{
-              position: 'absolute', top: 12, left: 12,
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(252,92,92,0.9)', borderRadius: 20, padding: '4px 10px',
-            }}>
+            <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(252,92,92,0.9)', borderRadius: 20, padding: '4px 10px' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} className="animate-pulse-glow" />
               <span style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>{fmt(elapsed)}</span>
             </div>
           )}
+
+          {/* Flip camera overlay button (live / recording) */}
+          {isLiveState && devices.length > 1 && (
+            <Tooltip title="Switch camera">
+              <button
+                type="button"
+                onClick={flipCamera}
+                style={{
+                  position: 'absolute', top: 12, right: 12,
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,92,252,0.7)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.45)')}
+              >
+                <SyncOutlined style={{ fontSize: 15 }} />
+              </button>
+            </Tooltip>
+          )}
         </div>
 
-        {/* Controls */}
+        {/* ── Controls ─────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {(cameraState === 'idle' || cameraState === 'error') && (
             <div style={{ display: 'flex', gap: 10 }}>
@@ -295,7 +411,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
           )}
 
           {cameraState === 'requesting' && (
-            <div style={{ ...ghostBtn, textAlign: 'center' }}>Waiting for permission…</div>
+            <div style={{ ...ghostBtn, textAlign: 'center', cursor: 'default' }}>Waiting for permission…</div>
           )}
 
           {cameraState === 'live' && (
@@ -333,14 +449,12 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
               >
                 Save to device
               </button>
-              <button type="button" onClick={handleDiscard} style={ghostBtn}>
-                Discard
-              </button>
+              <button type="button" onClick={handleDiscard} style={ghostBtn}>Discard</button>
             </div>
           )}
         </div>
 
-        {/* Drop zone — only in idle/error */}
+        {/* ── Drop zone ─────────────────────────────────────────────────────── */}
         {(cameraState === 'idle' || cameraState === 'error') && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '12px 0 10px' }}>
@@ -364,17 +478,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
                 }
               }}
               style={{
-                width: '100%',
-                padding: '20px 0',
+                width: '100%', padding: '20px 0',
                 border: '2px dashed var(--border)',
                 borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                cursor: 'pointer',
-                transition: 'border-color 0.15s',
-                boxSizing: 'border-box',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                cursor: 'pointer', transition: 'border-color 0.15s', boxSizing: 'border-box',
               }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
@@ -386,43 +494,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
           </>
         )}
 
-        {/* Hidden file input — no capture attr so it shows the file picker, not the camera */}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="video/*"
-          onChange={handleFileUpload}
-          style={{ display: 'none' }}
-        />
+        <input ref={fileRef} type="file" accept="video/*" onChange={handleFileUpload} style={{ display: 'none' }} />
       </div>
     </div>
   );
 };
 
 const primaryBtn: React.CSSProperties = {
-  flex: 1,
-  padding: '11px 0',
-  borderRadius: 'var(--radius-md)',
-  border: 'none',
-  background: 'var(--grad-primary)',
-  color: '#fff',
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontFamily: 'var(--font-body)',
-  textAlign: 'center',
+  flex: 1, padding: '11px 0',
+  borderRadius: 'var(--radius-md)', border: 'none',
+  background: 'var(--grad-primary)', color: '#fff',
+  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  fontFamily: 'var(--font-body)', textAlign: 'center',
 };
 
 const ghostBtn: React.CSSProperties = {
-  flex: 1,
-  padding: '11px 0',
-  borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--border)',
-  background: 'transparent',
-  color: 'var(--text-muted)',
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: 'pointer',
-  fontFamily: 'var(--font-body)',
-  textAlign: 'center',
+  flex: 1, padding: '11px 0',
+  borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+  background: 'transparent', color: 'var(--text-muted)',
+  fontSize: 13, fontWeight: 500, cursor: 'pointer',
+  fontFamily: 'var(--font-body)', textAlign: 'center',
 };
