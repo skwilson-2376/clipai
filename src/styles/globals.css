@@ -124,3 +124,30 @@ textarea {
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-slide-up   { animation: slide-in-up 0.3s ease forwards; }
 .animate-fade-in    { animation: fade-in 0.25s ease forwards; }
+
+/* ── Ant Design overrides ──────────────────────────────────────────────────── */
+
+/* Flush tab bar bottom border with wrapper border */
+.ant-tabs .ant-tabs-nav::before { border-bottom-color: transparent !important; }
+
+/* Remove default tab content padding */
+.ant-tabs-top > .ant-tabs-content-holder { border: none; }
+
+/* Segmented: softer look */
+.ant-segmented { background: #EEEDF8; }
+
+/* Slider track uses primary colour (already set via token, this is a fallback) */
+.ant-slider-track { background-color: #7C5CFC !important; }
+
+/* Drawer title font */
+.ant-drawer-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  color: #1A1829;
+}
+
+/* Smooth button transitions */
+.ant-btn { transition: all 0.15s !important; }
+
+/* Tag pill style */
+.ant-tag { border-radius: 20px; }

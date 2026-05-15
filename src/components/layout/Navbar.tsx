@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Button, Tag, Space } from 'antd';
 
 const NAV_LINKS = [
   { label: 'Studio',    path: '/studio'    },
   { label: 'Library',   path: '/library'   },
   { label: 'Templates', path: '/templates' },
   { label: 'Pricing',   path: '/pricing'   },
-  { label: 'Logs',      path: '/logs'      },
 ] as const;
 
 interface NavbarProps {
@@ -14,110 +14,97 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ mobile = false }) => {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-
-  const active = NAV_LINKS.find(l => location.pathname.startsWith(l.path))?.label ?? '';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const active   = NAV_LINKS.find(l => location.pathname.startsWith(l.path))?.label ?? '';
 
   return (
-    <nav
+    <header
       style={{
+        height: 'var(--nav-height)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 24px',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--bg)',
-        height: 'var(--nav-height)',
-        gap: 32,
+        background: '#fff',
+        borderBottom: '1px solid #D8D6EE',
         position: 'sticky',
         top: 0,
         zIndex: 100,
+        gap: 8,
       }}
     >
       {/* Logo */}
       <div
         onClick={() => navigate('/studio')}
-        style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: 0, userSelect: 'none', cursor: 'pointer' }}
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 800,
+          fontSize: 20,
+          letterSpacing: '-0.5px',
+          cursor: 'pointer',
+          userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          marginRight: 8,
+          flexShrink: 0,
+        }}
       >
         <span style={{ background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Clip</span>
         <span style={{ color: 'var(--accent3)' }}>AI</span>
       </div>
 
-      {/* Nav links — hidden on mobile */}
+      <Tag color="purple" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', marginRight: 8 }}>BETA</Tag>
+
+      {/* Nav links */}
       {!mobile && (
-        <ul style={{ display: 'flex', listStyle: 'none', gap: 4, flex: 1 }}>
+        <nav style={{ display: 'flex', gap: 2, flex: 1 }}>
           {NAV_LINKS.map(({ label, path }) => (
-            <li key={label}>
-              <button
-                type="button"
-                onClick={() => navigate(path)}
-                style={{
-                  fontSize: 13,
-                  color: active === label ? 'var(--text)' : 'var(--text-muted)',
-                  background: active === label ? 'var(--surface2)' : 'transparent',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: active === label ? 600 : 400,
-                  transition: 'color 0.15s, background 0.15s',
-                }}
-              >
-                {label}
-              </button>
-            </li>
+            <button
+              key={label}
+              type="button"
+              onClick={() => navigate(path)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 8,
+                border: 'none',
+                background: active === label ? 'rgba(124,92,252,0.08)' : 'transparent',
+                color: active === label ? '#7C5CFC' : '#5C5A74',
+                fontSize: 13,
+                fontWeight: active === label ? 600 : 400,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { if (active !== label) e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+              onMouseLeave={e => { if (active !== label) e.currentTarget.style.background = 'transparent'; }}
+            >
+              {label}
+            </button>
           ))}
-        </ul>
+        </nav>
       )}
 
-      {/* Right actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
-        <span
-          style={{
-            fontSize: 11,
-            padding: '3px 8px',
-            borderRadius: 20,
-            background: 'var(--pill-bg)',
-            border: '1px solid var(--pill-border)',
-            color: '#A98BFC',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 500,
-          }}
-        >
-          Beta
-        </span>
+      {/* Actions */}
+      <Space style={{ marginLeft: 'auto' }}>
         {mobile ? (
-          <button
-            type="button"
-            onClick={() => navigate('/signup')}
-            style={{ padding: '6px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--grad-primary)', color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-          >
+          <Button type="primary" size="small" onClick={() => navigate('/signup')}>
             Sign up
-          </button>
+          </Button>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              style={{ padding: '6px 14px', borderRadius: 'var(--radius-sm)', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'border-color 0.15s, color 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-            >
+            <Button type="text" onClick={() => navigate('/login')} style={{ color: '#5C5A74' }}>
               Log in
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              type="primary"
               onClick={() => navigate('/signup')}
-              style={{ padding: '6px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--grad-primary)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'opacity 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              style={{ background: 'linear-gradient(135deg,#7C5CFC,#FC5CAD)', border: 'none' }}
             >
               Sign up free
-            </button>
+            </Button>
           </>
         )}
-      </div>
-    </nav>
+      </Space>
+    </header>
   );
 };

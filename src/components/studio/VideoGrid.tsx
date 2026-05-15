@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
+import { Tabs, Empty } from 'antd';
 import type { VideoGeneration, VideoStyle } from '../../types';
 import { VideoCard, NewVideoCard } from './VideoCard';
 
 type FilterTab = 'All' | VideoStyle;
 
-const TABS: FilterTab[] = ['All', 'realistic', 'anime', '3d'];
-const TAB_LABELS: Record<FilterTab, string> = {
-  All: 'All Videos',
-  realistic: 'Realistic',
-  anime: 'Anime',
-  '3d': '3D Animation',
-};
+const TAB_ITEMS = [
+  { key: 'All',       label: 'All Videos'   },
+  { key: 'realistic', label: 'Realistic'     },
+  { key: 'anime',     label: 'Anime'         },
+  { key: '3d',        label: '3D Animation'  },
+];
 
 interface VideoGridProps {
   generations: VideoGeneration[];
@@ -40,47 +40,25 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      {/* Tabs */}
-      <div
-        role="tablist"
-        aria-label="Filter by style"
-        style={{ display: 'flex', padding: '0 24px', borderBottom: '1px solid var(--border)' }}
-      >
-        {TABS.map(tab => (
-          <button
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              fontSize: 13,
-              color: activeTab === tab ? 'var(--text)' : 'var(--text-muted)',
-              padding: '12px 16px',
-              cursor: 'pointer',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: `2px solid ${activeTab === tab ? 'var(--accent)' : 'transparent'}`,
-              fontFamily: 'var(--font-body)',
-              transition: 'all 0.15s',
-            }}
-          >
-            {TAB_LABELS[tab]}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={k => setActiveTab(k as FilterTab)}
+        size="small"
+        items={TAB_ITEMS}
+        style={{ background: '#fff' }}
+        tabBarStyle={{ padding: '0 24px', marginBottom: 0, borderBottom: '1px solid #D8D6EE' }}
+      />
 
-      {/* Scrollable grid area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
 
-        {/* In-progress banner */}
+        {/* Generating banner */}
         {isGenerating && (
           <div
             className="animate-slide-up"
             style={{
-              background: 'rgba(124,92,252,0.1)',
-              border: '1px solid rgba(124,92,252,0.3)',
-              borderRadius: 'var(--radius-lg)',
+              background: 'rgba(124,92,252,0.08)',
+              border: '1px solid rgba(124,92,252,0.25)',
+              borderRadius: 10,
               padding: '12px 16px',
               marginBottom: 20,
               display: 'flex',
@@ -89,24 +67,17 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
             }}
           >
             <div
-              style={{
-                width: 20,
-                height: 20,
-                border: '2px solid rgba(124,92,252,0.3)',
-                borderTopColor: 'var(--accent)',
-                borderRadius: '50%',
-                flexShrink: 0,
-              }}
+              style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(124,92,252,0.3)', borderTopColor: '#7C5CFC', flexShrink: 0 }}
               className="animate-spin"
             />
             <div>
-              <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>Generating your video…</div>
-              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Usually takes 20–40 seconds</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1829' }}>Generating your video…</div>
+              <div style={{ fontSize: 11, color: '#8E8CA6' }}>Usually takes 20–40 seconds</div>
             </div>
           </div>
         )}
 
-        {/* In progress cards */}
+        {/* In-progress cards */}
         {inProgress.length > 0 && (
           <section style={{ marginBottom: 28 }}>
             <SectionHeader title="In Progress" />
@@ -118,13 +89,9 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
           </section>
         )}
 
-        {/* Recent generations */}
+        {/* Recent */}
         <section style={{ marginBottom: 28 }}>
-          <SectionHeader
-            title="Recent Generations"
-            actionLabel={activeTab !== 'All' ? 'See all' : undefined}
-            onAction={() => setActiveTab('All')}
-          />
+          {recent.length > 0 && <SectionHeader title="Recent Generations" />}
           <div style={gridStyle}>
             {recent.map(gen => (
               <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} onShare={onShare} />
@@ -135,17 +102,15 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
         {/* Empty state */}
         {generations.length === 0 && !isGenerating && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '60px 20px',
-              color: 'var(--text-faint)',
-            }}
-          >
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🎬</div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6 }}>No videos yet</div>
-            <div style={{ fontSize: 13 }}>Write a prompt above and hit Generate to create your first video</div>
-          </div>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <span style={{ color: '#8E8CA6' }}>
+                No videos yet — create your first one above
+              </span>
+            }
+            style={{ padding: '60px 0' }}
+          />
         )}
       </div>
     </div>
@@ -154,30 +119,14 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))',
   gap: 14,
 };
 
-const SectionHeader: React.FC<{ title: string; actionLabel?: string; onAction?: () => void }> = ({ title, actionLabel, onAction }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-    <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ marginBottom: 14 }}>
+    <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#1A1829' }}>
       {title}
     </span>
-    {actionLabel && (
-      <button
-        type="button"
-        onClick={onAction}
-        style={{
-          fontSize: 12,
-          color: 'var(--accent)',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)',
-        }}
-      >
-        {actionLabel} →
-      </button>
-    )}
   </div>
 );
