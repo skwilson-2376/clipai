@@ -34,6 +34,7 @@ export function useCharacters() {
     name: string,
     source: CharacterSource,
     imageUrlOrDescription: string,
+    generatedAvatarUrl?: string,
   ) => {
     const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
     const char: Character = {
@@ -41,9 +42,8 @@ export function useCharacters() {
       name: name.trim(),
       source,
       gradient,
-      ...(source === 'uploaded'
-        ? { imageUrl: imageUrlOrDescription }
-        : { description: imageUrlOrDescription }),
+      imageUrl:    source === 'uploaded' ? imageUrlOrDescription : generatedAvatarUrl,
+      description: source === 'ai'       ? imageUrlOrDescription : undefined,
     };
     setCharacters(prev => [char, ...prev]);
     return char.id;

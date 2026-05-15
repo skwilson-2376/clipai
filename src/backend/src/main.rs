@@ -85,6 +85,9 @@ async fn main() -> anyhow::Result<()> {
         // OAuth flows
         .route("/api/oauth/:platform/start",    get(routes::oauth::start))
         .route("/api/oauth/:platform/callback", get(routes::oauth::callback))
+        // Auth
+        .route("/api/auth/register", post(routes::auth::register))
+        .route("/api/auth/login",    post(routes::auth::login))
         // Sign-up logs
         .route("/api/logs", post(routes::logs::create).get(routes::logs::list))
         .with_state(state)

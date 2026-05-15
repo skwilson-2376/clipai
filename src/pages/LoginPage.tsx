@@ -6,11 +6,33 @@ export default function LoginPage() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setTimeout(() => { setLoading(false); navigate('/studio'); }, 1200);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      if (res.ok) {
+        navigate('/studio');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Invalid email or password.');
+      }
+    } catch {
+      setError('Network error — please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    window.open(`mailto:support@clipai.com?subject=Password reset request&body=Email: ${encodeURIComponent(email)}`, '_blank');
   };
 
   return (
@@ -57,6 +79,13 @@ export default function LoginPage() {
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
 
+          {/* Error */}
+          {error && (
+            <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#EF4444', fontSize: 13, marginBottom: 4 }}>
+              {error}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
@@ -75,7 +104,7 @@ export default function LoginPage() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>Password</label>
-                <a href="#" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Forgot password?</a>
+                <button type="button" onClick={handleForgotPassword} style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)' }}>Forgot password?</button>
               </div>
               <input
                 type="password"

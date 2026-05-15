@@ -1,16 +1,33 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import type { Character, CharacterSource } from '../../types';
 
 interface CharacterPanelProps {
   characters: Character[];
   selectedIds?: string[];
-  onAdd: (name: string, source: CharacterSource, imageUrlOrDescription: string) => void;
+  onAdd: (name: string, source: CharacterSource, imageUrlOrDescription: string, generatedAvatarUrl?: string) => void;
   onRemove: (id: string) => void;
   onToggleSelect?: (id: string) => void;
   mobile?: boolean;
 }
 
 type AddTab = 'ai' | 'uploaded';
+
+// Pick a DiceBear style based on keywords in the description
+function pickAvatarStyle(description: string): string {
+  const d = description.toLowerCase();
+  if (/anime|manga|kawaii|chibi|cute/.test(d))  return 'adventurer';
+  if (/robot|mech|android|cyborg|ai/.test(d))   return 'bottts-neutral';
+  if (/pixel|retro|8-bit/.test(d))              return 'pixel-art';
+  if (/woman|girl|female|she|her/.test(d))      return 'lorelei';
+  if (/man|boy|male|he|him/.test(d))            return 'notionists';
+  return 'personas';
+}
+
+function buildAvatarUrl(name: string, description: string, variant: number): string {
+  const style = pickAvatarStyle(description);
+  const seed  = encodeURIComponent(`${name}-${description.slice(0, 30)}-v${variant}`);
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&radius=50&size=200`;
+}
 
 export const CharacterPanel: React.FC<CharacterPanelProps> = ({
   characters,
@@ -20,11 +37,14 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
   onToggleSelect,
   mobile = false,
 }) => {
-  const [showForm, setShowForm]     = useState(false);
-  const [addTab, setAddTab]         = useState<AddTab>('ai');
-  const [name, setName]             = useState('');
+  const [showForm, setShowForm]       = useState(false);
+  const [addTab, setAddTab]           = useState<AddTab>('ai');
+  const [name, setName]               = useState('');
   const [description, setDescription] = useState('');
-  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewUrl, setPreviewUrl]   = useState<string>('');
+  const [avatarUrl, setAvatarUrl]     = useState<string>('');
+  const [generating, setGenerating]   = useState(false);
+  const [variant, setVariant]         = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -32,6 +52,9 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
     setName('');
     setDescription('');
     setPreviewUrl('');
+    setAvatarUrl('');
+    setGenerating(false);
+    setVariant(0);
     setAddTab('ai');
   };
 
@@ -43,13 +66,36 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
     reader.readAsDataURL(file);
   };
 
+  const handleGenerate = useCallback(async (nextVariant = variant) => {
+    if (!name.trim() || !description.trim()) return;
+    setGenerating(true);
+    setAvatarUrl('');
+    // Simulate AI processing delay
+    await new Promise(r => setTimeout(r, 1800));
+    setAvatarUrl(buildAvatarUrl(name, description, nextVariant));
+    setGenerating(false);
+  }, [name, description, variant]);
+
+  const handleRegenerate = () => {
+    const next = variant + 1;
+    setVariant(next);
+    handleGenerate(next);
+  };
+
   const handleSave = () => {
     if (!name.trim()) return;
-    if (addTab === 'ai' && !description.trim()) return;
-    if (addTab === 'uploaded' && !previewUrl) return;
-    onAdd(name, addTab, addTab === 'ai' ? description : previewUrl);
+    if (addTab === 'ai') {
+      if (!avatarUrl) return;
+      onAdd(name, 'ai', description, avatarUrl);
+    } else {
+      if (!previewUrl) return;
+      onAdd(name, 'uploaded', previewUrl);
+    }
     reset();
   };
+
+  const canGenerate = name.trim().length > 0 && description.trim().length > 5;
+  const canSave = addTab === 'ai' ? !!avatarUrl : !!previewUrl;
 
   const tabBtn = (id: AddTab, label: string) => (
     <button
@@ -155,25 +201,55 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
           />
 
           {addTab === 'ai' ? (
-            <textarea
-              placeholder="Describe your character's appearance, personality, and style…"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '9px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border)',
-                background: 'var(--bg)',
-                color: 'var(--text)',
-                fontSize: 13,
-                fontFamily: 'var(--font-body)',
-                outline: 'none',
-                resize: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
+            <>
+              <textarea
+                placeholder="Describe your character's appearance, personality, and style…"
+                value={description}
+                onChange={e => { setDescription(e.target.value); setAvatarUrl(''); }}
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: 13,
+                  fontFamily: 'var(--font-body)',
+                  outline: 'none',
+                  resize: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              {/* Avatar preview or generate button */}
+              {avatarUrl ? (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <img src={avatarUrl} alt="Generated avatar" style={{ width: 56, height: 56, borderRadius: '50%', flexShrink: 0, border: '2px solid var(--accent)' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{description}</div>
+                  </div>
+                  <button type="button" onClick={handleRegenerate}
+                    style={{ fontSize: 11, padding: '4px 10px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-body)' }}>
+                    ↻ New look
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => handleGenerate(variant)} disabled={!canGenerate || generating}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 'var(--radius-sm)', border: 'none',
+                    background: canGenerate && !generating ? 'linear-gradient(135deg,#7C5CFC,#FC5CAD)' : 'var(--border2)',
+                    color: '#fff', fontSize: 13, fontWeight: 600,
+                    cursor: canGenerate && !generating ? 'pointer' : 'default',
+                    fontFamily: 'var(--font-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}>
+                  {generating
+                    ? <><div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff' }} className="animate-spin" />Generating character…</>
+                    : '✨ Generate Character'}
+                </button>
+              )}
+            </>
           ) : (
             <div>
               <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
@@ -226,7 +302,7 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              disabled={!name.trim() || (addTab === 'ai' ? !description.trim() : !previewUrl)}
+              disabled={!canSave}
               style={{
                 flex: 2,
                 padding: '8px 0',
@@ -236,9 +312,9 @@ export const CharacterPanel: React.FC<CharacterPanelProps> = ({
                 color: '#fff',
                 fontSize: 13,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: canSave ? 'pointer' : 'default',
                 fontFamily: 'var(--font-body)',
-                opacity: (!name.trim() || (addTab === 'ai' ? !description.trim() : !previewUrl)) ? 0.5 : 1,
+                opacity: canSave ? 1 : 0.45,
               }}
             >
               Save Character

@@ -145,7 +145,13 @@ export default function PricingPage() {
               {/* CTA */}
               <button
                 type="button"
-                onClick={() => navigate(p.id === 'enterprise' ? '#' : '/signup')}
+                onClick={() => {
+                  if (p.id === 'enterprise') {
+                    window.open('mailto:sales@clipai.com?subject=Enterprise inquiry', '_blank');
+                  } else {
+                    navigate('/signup');
+                  }
+                }}
                 style={{
                   width: '100%',
                   padding: '12px 0',

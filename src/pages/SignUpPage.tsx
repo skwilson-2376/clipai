@@ -8,23 +8,38 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [agreed, setAgreed]     = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
 
   const valid = name.trim() && email.trim() && password.length >= 8 && agreed;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
+    setError('');
     setLoading(true);
     try {
-      await fetch('/api/logs', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, plan: 'free' }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
       });
+      if (res.ok) {
+        // Also log the sign-up (non-blocking)
+        fetch('/api/logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), email: email.trim(), plan: 'free' }),
+        }).catch(() => {});
+        navigate('/studio');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Could not create account. Please try again.');
+      }
     } catch {
-      // log failure is non-blocking
+      setError('Network error — please try again.');
+    } finally {
+      setLoading(false);
     }
-    setTimeout(() => { setLoading(false); navigate('/studio'); }, 600);
   };
 
   return (
@@ -76,6 +91,13 @@ export default function SignUpPage() {
             <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>or</span>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
+
+          {/* Error */}
+          {error && (
+            <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#EF4444', fontSize: 13, marginBottom: 4 }}>
+              {error}
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

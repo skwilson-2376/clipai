@@ -153,7 +153,7 @@ export default function TemplatesPage() {
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, flex: 1 }}>{t.description}</p>
                 <button
                   type="button"
-                  onClick={() => navigate('/studio')}
+                  onClick={() => navigate('/studio', { state: { template: { style: t.style, ratio: t.ratio, duration: t.duration, name: t.name } } })}
                   style={{ marginTop: 8, width: '100%', padding: '9px 0', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--grad-primary)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'opacity 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}

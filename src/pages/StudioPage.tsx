@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { Navbar }          from '../components/layout/Navbar';
 import { LeftSidebar }     from '../components/sidebar/LeftSidebar';
@@ -117,6 +118,7 @@ const MobileBottomNav: React.FC<{ activeTab: MobileTab; onChange: (tab: MobileTa
 );
 
 export default function StudioPage() {
+  const location = useLocation();
   const [playingGeneration, setPlayingGeneration] = useState<VideoGeneration | null>(null);
   const [sharingGeneration, setSharingGeneration] = useState<VideoGeneration | null>(null);
   const [mobileTab, setMobileTab]   = useState<MobileTab>('videos');
@@ -139,6 +141,17 @@ export default function StudioPage() {
 
   const { generations, isGenerating, addGeneration, deleteGeneration } = useGenerations();
   const { characters, addCharacter, removeCharacter }                  = useCharacters();
+
+  useEffect(() => {
+    const tpl = (location.state as { template?: { style: string; ratio: string; duration: string; name: string } } | null)?.template;
+    if (!tpl) return;
+    const styleMap: Record<string, Parameters<typeof updateStyle>[0]> = {
+      'Realistic': 'realistic', 'Anime': 'anime', '3D Animation': '3d',
+    };
+    if (styleMap[tpl.style]) updateStyle(styleMap[tpl.style]);
+    if (isMobile) setMobileMode('prompt');
+    else setDesktopMode('prompt');
+  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGenerate = (prompt: string, story?: FilmStory) => {
     addGeneration(prompt, settings, story, undefined);

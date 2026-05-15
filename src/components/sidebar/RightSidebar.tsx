@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Resolution, VideoGeneration, UserPlan } from '../../types';
 import type { GenerationSettings } from '../../types';
 import { StatusBadge } from '../shared/Badge';
@@ -75,6 +76,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   plan,
   mobile = false,
 }) => {
+  const navigate    = useNavigate();
   const creditsLeft = plan.creditsTotal - plan.creditsUsed;
   const creditsPct  = (plan.creditsUsed / plan.creditsTotal) * 100;
 
@@ -126,7 +128,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           size="sm"
           fullWidth
           style={{ marginTop: 10 }}
-          onClick={() => alert('Upgrade flow — connect to your billing system')}
+          onClick={() => navigate('/pricing')}
         >
           Upgrade to Unlimited
         </Button>
