@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import type React from 'react';
 import type { FilmStory, VideoGeneration, GenerationSettings } from '../types';
 import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
 
@@ -74,6 +75,37 @@ const SEED_GENERATIONS: VideoGeneration[] = [
   },
 ];
 
+// Progress steps in ms from generation start — mirrors backend simulate_generation timing
+const SIM_STEPS = [
+  { progress: 8,  ms: 1500 },
+  { progress: 20, ms: 4000 },
+  { progress: 38, ms: 7000 },
+  { progress: 55, ms: 10500 },
+  { progress: 70, ms: 14000 },
+  { progress: 85, ms: 17000 },
+  { progress: 95, ms: 19500 },
+  { progress: 100, ms: 22000, done: true },
+];
+
+function runClientSimulation(
+  id: string,
+  mountedRef: React.MutableRefObject<boolean>,
+  setGenerations: React.Dispatch<React.SetStateAction<VideoGeneration[]>>,
+  setIsGenerating: React.Dispatch<React.SetStateAction<boolean>>,
+) {
+  SIM_STEPS.forEach(({ progress, ms, done }) => {
+    setTimeout(() => {
+      if (!mountedRef.current) return;
+      setGenerations(prev =>
+        prev.map(g =>
+          g.id === id ? { ...g, progress, status: done ? 'done' : 'processing' } : g
+        )
+      );
+      if (done && mountedRef.current) setIsGenerating(false);
+    }, ms);
+  });
+}
+
 export function useGenerations() {
   const [generations, setGenerations] = useState<VideoGeneration[]>(loadFromStorage);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -141,8 +173,12 @@ export function useGenerations() {
         ({ id: jobId } = await res.json());
       } catch {
         if (!mountedRef.current) return;
-        setGenerations(prev => prev.map(g => g.id === tempId ? { ...g, status: 'failed' } : g));
-        setIsGenerating(false);
+        // Backend unreachable — simulate progress client-side so the demo still works
+        const simId = `sim-${Date.now()}`;
+        setGenerations(prev =>
+          prev.map(g => g.id === tempId ? { ...g, id: simId, status: 'processing' } : g)
+        );
+        runClientSimulation(simId, mountedRef, setGenerations, setIsGenerating);
         return;
       }
 
