@@ -39,7 +39,21 @@ export const VideoCard: React.FC<VideoCardProps> = ({ generation, onPlay, onDele
       onClick={() => isPlayable && onPlay?.(generation)}
     >
       {/* Thumbnail */}
-      <div style={{ height: 120, background: gradient, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: 120, background: gradient, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+
+        {/* Animated source photo */}
+        {generation.sourcePhotoUrl && (
+          <img
+            src={generation.sourcePhotoUrl}
+            alt=""
+            className={isPlayable ? `photo-anim-${generation.style}` : undefined}
+            style={{
+              position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+              opacity: isProcessing ? 0.45 : 1,
+              transformOrigin: 'center',
+            }}
+          />
+        )}
 
         {/* Style badge */}
         {styleMeta && (

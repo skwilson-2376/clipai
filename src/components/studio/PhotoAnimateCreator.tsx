@@ -11,7 +11,7 @@ interface Props {
   onCameraMotionChange: (m: CameraMotion) => void;
   onDurationChange: (d: number) => void;
   onMotionChange: (v: number) => void;
-  onGenerate: (prompt: string) => void;
+  onGenerate: (prompt: string, sourcePhotoUrl?: string) => void;
 }
 
 const ANIMATION_STYLES = Object.keys(ANIMATION_STYLE_META) as VideoStyle[];
@@ -44,7 +44,7 @@ export const PhotoAnimateCreator: React.FC<Props> = ({
       ? `Animate this photo with ${ANIMATION_STYLE_META[settings.style]?.label ?? settings.style} style`
       : 'Create an animated short film';
     const desc = description.trim();
-    onGenerate(desc ? `${base}: ${desc}` : base);
+    onGenerate(desc ? `${base}: ${desc}` : base, photoUrl || undefined);
   };
 
   return (

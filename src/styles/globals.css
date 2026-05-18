@@ -151,6 +151,51 @@ textarea {
   animation: shimmer 1.8s linear infinite;
 }
 
+/* ── Photo-to-animation CSS effects ─────────────────────────────────────────── */
+
+@keyframes parallax-float {
+  0%   { transform: scale(1.08) translateX(0)    translateY(0); }
+  25%  { transform: scale(1.12) translateX(-2%)  translateY(-1%); }
+  50%  { transform: scale(1.10) translateX(2%)   translateY(1%); }
+  75%  { transform: scale(1.12) translateX(-1%)  translateY(2%); }
+  100% { transform: scale(1.08) translateX(0)    translateY(0); }
+}
+@keyframes ken-burns {
+  0%   { transform: scale(1)    translateX(0)    translateY(0); }
+  100% { transform: scale(1.18) translateX(-4%) translateY(-3%); }
+}
+@keyframes cinema-pan {
+  0%   { transform: scale(1.1) translateX(-5%); }
+  100% { transform: scale(1.1) translateX(5%); }
+}
+@keyframes clay-wobble {
+  0%,100% { transform: scale(1)    skewX(0deg)    skewY(0deg); }
+  20%     { transform: scale(1.03) skewX(0.8deg)  skewY(0.3deg); }
+  40%     { transform: scale(0.98) skewX(-0.5deg) skewY(-0.4deg); }
+  60%     { transform: scale(1.02) skewX(0.4deg)  skewY(0.6deg); }
+  80%     { transform: scale(0.99) skewX(-0.3deg) skewY(-0.2deg); }
+}
+@keyframes watercolor-float {
+  0%   { transform: scale(1)    translateY(0);     filter: saturate(1.1) brightness(1); }
+  50%  { transform: scale(1.05) translateY(-1.5%); filter: saturate(1.5) brightness(1.08); }
+  100% { transform: scale(1)    translateY(0);     filter: saturate(1.1) brightness(1); }
+}
+@keyframes cel-flicker {
+  0%,100% { opacity: 1;    transform: scale(1); }
+  10%     { opacity: 0.92; transform: scale(1.01); }
+  30%     { opacity: 1;    transform: scale(0.995); }
+  50%     { opacity: 0.95; transform: scale(1.008); }
+  70%     { opacity: 1;    transform: scale(1); }
+  85%     { opacity: 0.97; transform: scale(1.005); }
+}
+
+.photo-anim-parallax-3d   { animation: parallax-float 6s ease-in-out infinite; }
+.photo-anim-smooth-cinema { animation: cinema-pan 9s linear infinite alternate; }
+.photo-anim-clay-motion   { animation: clay-wobble 4s ease-in-out infinite; }
+.photo-anim-ken-burns     { animation: ken-burns 8s ease-in-out infinite alternate; }
+.photo-anim-watercolor    { animation: watercolor-float 5s ease-in-out infinite; }
+.photo-anim-cel-animation { animation: cel-flicker 1.2s steps(1) infinite; }
+
 /* ── Ant Design dark overrides ─────────────────────────────────────────────── */
 
 /* Flush tab bar bottom border */

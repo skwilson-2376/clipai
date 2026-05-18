@@ -161,6 +161,7 @@ export function useGenerations() {
       settings: GenerationSettings,
       story?: FilmStory,
       uploadedVideoUrl?: string,
+      sourcePhotoUrl?: string,
     ): Promise<void> => {
       if (!prompt.trim()) return;
 
@@ -189,6 +190,7 @@ export function useGenerations() {
         status: 'pending',
         createdAt: new Date(),
         thumbnailGradient: THUMB_GRADIENTS[settings.style],
+        sourcePhotoUrl,
         story,
       };
 

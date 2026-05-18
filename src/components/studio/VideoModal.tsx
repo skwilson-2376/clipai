@@ -109,8 +109,27 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
               />
             )}
 
-            {/* Gradient overlay with filter */}
-            {!resolvedUrl && filter !== 'none' && (
+            {/* Animated source photo when no video is ready */}
+            {!resolvedUrl && generation.sourcePhotoUrl && (
+              <img
+                src={generation.sourcePhotoUrl}
+                alt="Animated preview"
+                className={`photo-anim-${generation.style}`}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: FILTER_CSS[filter],
+                  transition: 'filter 0.3s ease',
+                  transformOrigin: 'center',
+                }}
+              />
+            )}
+
+            {/* Gradient overlay with filter — shown only if no photo */}
+            {!resolvedUrl && !generation.sourcePhotoUrl && filter !== 'none' && (
               <div style={{ position: 'absolute', inset: 0, background: gradient, filter: FILTER_CSS[filter], transition: 'filter 0.3s ease' }} />
             )}
 
@@ -144,7 +163,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
               ×
             </button>
 
-            {!resolvedUrl && (
+            {!resolvedUrl && !generation.sourcePhotoUrl && (
               <div
                 style={{
                   width: 56,

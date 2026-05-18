@@ -120,8 +120,8 @@ export default function StudioPage() {
     else setDesktopMode('photo-animate');
   }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleGenerate = (prompt: string, story?: FilmStory) => {
-    addGeneration(prompt, settings, story, undefined);
+  const handleGenerate = (prompt: string, story?: FilmStory, sourcePhotoUrl?: string) => {
+    addGeneration(prompt, settings, story, undefined, sourcePhotoUrl);
     if (isMobile) setMobileTab('videos');
   };
 
@@ -201,7 +201,7 @@ export default function StudioPage() {
                     settings={settings} isGenerating={isGenerating}
                     onStyleChange={updateStyle} onCameraMotionChange={updateCameraMotion}
                     onDurationChange={updateDuration} onMotionChange={updateMotion}
-                    onGenerate={p => handleGenerate(p)}
+                    onGenerate={(p, photo) => handleGenerate(p, undefined, photo)}
                   />
                 )}
                 {mobileMode === 'story'  && <StoryWriter characters={characters} onGenerate={(p, s) => handleGenerate(p, s)} isGenerating={isGenerating} />}
@@ -281,7 +281,7 @@ export default function StudioPage() {
               settings={settings} isGenerating={isGenerating}
               onStyleChange={updateStyle} onCameraMotionChange={updateCameraMotion}
               onDurationChange={updateDuration} onMotionChange={updateMotion}
-              onGenerate={p => handleGenerate(p)}
+              onGenerate={(p, photo) => handleGenerate(p, undefined, photo)}
             />
           )}
           {desktopMode === 'shortfilm' && filmPanel(
