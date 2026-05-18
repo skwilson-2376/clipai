@@ -195,17 +195,22 @@ export function useGenerations() {
       setIsGenerating(true);
       setGenerations(prev => [newGen, ...prev]);
 
-      // Submit generation job
+      // Submit generation job — abort after 4 s so the proxy hang doesn't stall the simulation
       let jobId: string;
+      const ctrl = new AbortController();
+      const abortTimer = setTimeout(() => ctrl.abort(), 4000);
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, ...settings }),
+          signal: ctrl.signal,
         });
+        clearTimeout(abortTimer);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         ({ id: jobId } = await res.json());
       } catch {
+        clearTimeout(abortTimer);
         if (!mountedRef.current) return;
         // Backend unreachable — simulate progress client-side so the demo still works
         const simId = `sim-${Date.now()}`;
