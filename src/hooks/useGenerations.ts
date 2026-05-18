@@ -5,12 +5,34 @@ import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
 
 const STORAGE_KEY = 'clipai_generations';
 
+// Free Google sample videos used for demo playback
+const SAMPLE_VIDEOS = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+];
+
+function pickSampleVideo(seed?: string): string {
+  const idx = seed
+    ? seed.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % SAMPLE_VIDEOS.length
+    : Math.floor(Math.random() * SAMPLE_VIDEOS.length);
+  return SAMPLE_VIDEOS[idx];
+}
+
 function loadFromStorage(): VideoGeneration[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as (Omit<VideoGeneration, 'createdAt'> & { createdAt: string })[];
-      return parsed.map(g => ({ ...g, createdAt: new Date(g.createdAt) }));
+      return parsed.map(g => ({
+        ...g,
+        createdAt: new Date(g.createdAt),
+        // Backfill videoUrl for done items that were saved before sample videos were added
+        videoUrl: g.videoUrl ?? (g.status === 'done' ? pickSampleVideo(g.id) : undefined),
+      }));
     }
   } catch { /* fall through to seed */ }
   return SEED_GENERATIONS;
@@ -30,6 +52,7 @@ const SEED_GENERATIONS: VideoGeneration[] = [
     status: 'done',
     createdAt: new Date(Date.now() - 2 * 60 * 1000),
     thumbnailGradient: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
+    videoUrl: SAMPLE_VIDEOS[0],
   },
   {
     id: '2',
@@ -44,6 +67,7 @@ const SEED_GENERATIONS: VideoGeneration[] = [
     status: 'done',
     createdAt: new Date(Date.now() - 18 * 60 * 1000),
     thumbnailGradient: 'linear-gradient(135deg, #1f0036, #6a0057, #c60092)',
+    videoUrl: SAMPLE_VIDEOS[1],
   },
   {
     id: '3',
@@ -58,6 +82,7 @@ const SEED_GENERATIONS: VideoGeneration[] = [
     status: 'done',
     createdAt: new Date(Date.now() - 60 * 60 * 1000),
     thumbnailGradient: 'linear-gradient(135deg, #004d7a, #008793, #00bf72)',
+    videoUrl: SAMPLE_VIDEOS[2],
   },
   {
     id: '4',
@@ -93,12 +118,15 @@ function runClientSimulation(
   setGenerations: React.Dispatch<React.SetStateAction<VideoGeneration[]>>,
   setIsGenerating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
+  const videoUrl = pickSampleVideo(id);
   SIM_STEPS.forEach(({ progress, ms, done }) => {
     setTimeout(() => {
       if (!mountedRef.current) return;
       setGenerations(prev =>
         prev.map(g =>
-          g.id === id ? { ...g, progress, status: done ? 'done' : 'processing' } : g
+          g.id === id
+            ? { ...g, progress, status: done ? 'done' : 'processing', ...(done ? { videoUrl } : {}) }
+            : g
         )
       );
       if (done && mountedRef.current) setIsGenerating(false);
