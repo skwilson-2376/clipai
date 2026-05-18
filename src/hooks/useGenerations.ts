@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type React from 'react';
 import type { FilmStory, VideoGeneration, GenerationSettings } from '../types';
 import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
+import { deleteVideoBlob } from '../lib/videoDB';
 
 const STORAGE_KEY = 'clipai_generations';
 
@@ -244,7 +245,13 @@ export function useGenerations() {
   const deleteGeneration = useCallback((id: string) => {
     eventSourcesRef.current.get(id)?.close();
     eventSourcesRef.current.delete(id);
-    setGenerations(prev => prev.filter(g => g.id !== id));
+    setGenerations(prev => {
+      const gen = prev.find(g => g.id === id);
+      if (gen?.videoUrl?.startsWith('idb://')) {
+        deleteVideoBlob(gen.videoUrl.slice(6)).catch(() => {});
+      }
+      return prev.filter(g => g.id !== id);
+    });
   }, []);
 
   return { generations, isGenerating, addGeneration, deleteGeneration };

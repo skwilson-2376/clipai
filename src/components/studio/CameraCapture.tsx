@@ -3,6 +3,7 @@ import { Select, Tooltip } from 'antd';
 import { SyncOutlined } from '@ant-design/icons';
 import type { VideoGeneration, GenerationSettings } from '../../types';
 import { THUMB_GRADIENTS } from '../../constants/thumbnailGradients';
+import { saveVideoBlob } from '../../lib/videoDB';
 
 interface CameraCaptureProps {
   settings: GenerationSettings;
@@ -211,22 +212,31 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ settings, onCaptur
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    setPreviewUrl(URL.createObjectURL(file));
     stopStream();
     setCameraState('preview');
     e.target.value = '';
   };
 
-  const handleUseVideo = () => {
+  const handleUseVideo = async () => {
+    const id = `upload-${Date.now()}`;
+    let videoUrl = previewUrl;
+    try {
+      const res  = await fetch(previewUrl);
+      const blob = await res.blob();
+      await saveVideoBlob(id, blob);
+      videoUrl = `idb://${id}`;
+    } catch {
+      // blob URL still works for the current session
+    }
     const gen: VideoGeneration = {
-      id: `upload-${Date.now()}`,
-      prompt: 'Uploaded video',
+      id,
+      prompt: 'Recorded video',
       ...settings,
       status: 'done',
       createdAt: new Date(),
       thumbnailGradient: THUMB_GRADIENTS[settings.style],
-      videoUrl: previewUrl,
+      videoUrl,
       isUploaded: true,
     };
     onCapture(gen);

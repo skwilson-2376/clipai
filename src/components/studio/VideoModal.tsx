@@ -4,6 +4,7 @@ import { StyleBadge, StatusBadge } from '../shared/Badge';
 import { THUMB_GRADIENTS } from '../../constants/thumbnailGradients';
 import { FilterPicker, FILTER_CSS } from './FilterPicker';
 import { PostModal } from './PostModal';
+import { getVideoBlob } from '../../lib/videoDB';
 
 interface VideoModalProps {
   generation: VideoGeneration;
@@ -20,9 +21,22 @@ const META_ROWS: Array<[string, (g: VideoGeneration) => string]> = [
 ];
 
 export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) => {
-  const [filter, setFilter]       = useState<VideoFilter>('none');
-  const [showPost, setShowPost]   = useState(false);
+  const [filter, setFilter]           = useState<VideoFilter>('none');
+  const [showPost, setShowPost]       = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const gradient = generation.thumbnailGradient ?? THUMB_GRADIENTS[generation.style];
+
+  // Resolve idb:// URLs stored in IndexedDB into a temporary object URL
+  useEffect(() => {
+    const raw = generation.videoUrl;
+    if (!raw) { setResolvedUrl(null); return; }
+    if (!raw.startsWith('idb://')) { setResolvedUrl(raw); return; }
+    let objUrl = '';
+    getVideoBlob(raw.slice(6)).then(blob => {
+      if (blob) { objUrl = URL.createObjectURL(blob); setResolvedUrl(objUrl); }
+    });
+    return () => { if (objUrl) URL.revokeObjectURL(objUrl); };
+  }, [generation.videoUrl]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -67,7 +81,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
           <div
             style={{
               height: 220,
-              background: generation.videoUrl ? '#000' : gradient,
+              background: resolvedUrl ? '#000' : gradient,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -76,9 +90,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
               flexShrink: 0,
             }}
           >
-            {generation.videoUrl && (
+            {resolvedUrl && (
               <video
-                src={generation.videoUrl}
+                src={resolvedUrl}
                 controls
                 autoPlay
                 muted
@@ -96,7 +110,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
             )}
 
             {/* Gradient overlay with filter */}
-            {!generation.videoUrl && filter !== 'none' && (
+            {!resolvedUrl && filter !== 'none' && (
               <div style={{ position: 'absolute', inset: 0, background: gradient, filter: FILTER_CSS[filter], transition: 'filter 0.3s ease' }} />
             )}
 
@@ -130,7 +144,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ generation, onClose }) =
               ×
             </button>
 
-            {!generation.videoUrl && (
+            {!resolvedUrl && (
               <div
                 style={{
                   width: 56,
