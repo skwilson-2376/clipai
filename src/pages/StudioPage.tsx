@@ -3,20 +3,20 @@ import { useLocation } from 'react-router-dom';
 import { Tabs, Button, Tag, Space } from 'antd';
 import { SettingOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
-import { Navbar }          from '../components/layout/Navbar';
-import { LeftSidebar }     from '../components/sidebar/LeftSidebar';
-import { RightSidebar }    from '../components/sidebar/RightSidebar';
-import { PromptInput }     from '../components/studio/PromptInput';
-import { VideoGrid }       from '../components/studio/VideoGrid';
-import { VideoModal }      from '../components/studio/VideoModal';
-import { StoryWriter }     from '../components/studio/StoryWriter';
-import { CameraCapture }   from '../components/studio/CameraCapture';
-import { CharacterPanel }  from '../components/people/CharacterPanel';
-import { PostModal }       from '../components/studio/PostModal';
-import { ShortFilmCreator } from '../components/studio/ShortFilmCreator';
-import { AnimeCreator }    from '../components/studio/AnimeCreator';
-import { ThreeDCreator }   from '../components/studio/ThreeDCreator';
-import { SettingsDrawer }  from '../components/studio/SettingsDrawer';
+import { Navbar }               from '../components/layout/Navbar';
+import { LeftSidebar }          from '../components/sidebar/LeftSidebar';
+import { RightSidebar }         from '../components/sidebar/RightSidebar';
+import { PromptInput }          from '../components/studio/PromptInput';
+import { VideoGrid }            from '../components/studio/VideoGrid';
+import { VideoModal }           from '../components/studio/VideoModal';
+import { StoryWriter }          from '../components/studio/StoryWriter';
+import { CameraCapture }        from '../components/studio/CameraCapture';
+import { CharacterPanel }       from '../components/people/CharacterPanel';
+import { PostModal }            from '../components/studio/PostModal';
+import { ShortFilmCreator }     from '../components/studio/ShortFilmCreator';
+import { ThreeDCreator }        from '../components/studio/ThreeDCreator';
+import { SettingsDrawer }       from '../components/studio/SettingsDrawer';
+import { PhotoAnimateCreator }  from '../components/studio/PhotoAnimateCreator';
 
 import { useGenerationSettings } from '../hooks/useGenerationSettings';
 import { useGenerations }        from '../hooks/useGenerations';
@@ -33,7 +33,7 @@ const MOCK_PLAN: UserPlan = {
   creditsUsed: 58,
 };
 
-// ── Mobile bottom nav ────────────────────────────────────────────────────────
+// ── Mobile bottom nav ─────────────────────────────────────────────────────────
 
 const MOBILE_TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
   {
@@ -41,11 +41,11 @@ const MOBILE_TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
     icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden><path d="M10.5 2.5L4 11h6l-.5 6.5L17 9h-6.5l.5-6.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></svg>,
   },
   {
-    id: 'videos', label: 'Videos',
+    id: 'videos', label: 'Gallery',
     icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
   },
   {
-    id: 'people', label: 'People',
+    id: 'people', label: 'Cast',
     icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden><circle cx="10" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.5"/><path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
   },
   {
@@ -59,7 +59,7 @@ const MOBILE_TABS: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
 ];
 
 const MobileBottomNav: React.FC<{ activeTab: MobileTab; onChange: (tab: MobileTab) => void }> = ({ activeTab, onChange }) => (
-  <nav style={{ display: 'flex', alignItems: 'stretch', background: '#fff', borderTop: '1px solid #D8D6EE', paddingBottom: 'env(safe-area-inset-bottom)', height: 'var(--bottom-nav-height)' }}>
+  <nav style={{ display: 'flex', alignItems: 'stretch', background: 'var(--surface)', borderTop: '1px solid var(--border)', paddingBottom: 'env(safe-area-inset-bottom)', height: 'var(--bottom-nav-height)' }}>
     {MOBILE_TABS.map(({ id, label, icon }) => {
       const active = activeTab === id;
       return (
@@ -67,7 +67,7 @@ const MobileBottomNav: React.FC<{ activeTab: MobileTab; onChange: (tab: MobileTa
           key={id}
           type="button"
           onClick={() => onChange(id)}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', color: active ? '#7C5CFC' : '#8E8CA6', transition: 'color 0.15s' }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', color: active ? 'var(--accent)' : 'var(--text-faint)', transition: 'color 0.15s' }}
         >
           {icon}
           <span style={{ fontSize: 9, fontFamily: 'var(--font-body)', fontWeight: active ? 600 : 400 }}>{label}</span>
@@ -77,29 +77,29 @@ const MobileBottomNav: React.FC<{ activeTab: MobileTab; onChange: (tab: MobileTa
   </nav>
 );
 
-// ── Desktop mode tab items ────────────────────────────────────────────────────
+// ── Desktop tab labels ────────────────────────────────────────────────────────
 
 const MODE_LABELS: Record<string, string> = {
-  shortfilm: '🎬 Short Film',
-  anime:     '✨ Anime',
-  '3dfilm':  '🎮 3D Animation',
-  camera:    '📷 Camera',
-  people:    '👥 People',
-  prompt:    '⚡ Prompt',
-  story:     '📖 Story',
+  'photo-animate': '🌊 Photo Animate',
+  'shortfilm':     '🎬 Short Film',
+  '3dfilm':        '🎭 3D Scene',
+  'camera':        '📷 Camera',
+  'people':        '👥 Cast',
+  'story':         '📖 Story',
+  'prompt':        '⚡ Prompt',
 };
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function StudioPage() {
   const location = useLocation();
 
   const [playingGeneration, setPlayingGeneration] = useState<VideoGeneration | null>(null);
   const [sharingGeneration, setSharingGeneration] = useState<VideoGeneration | null>(null);
-  const [mobileTab,    setMobileTab]    = useState<MobileTab>('videos');
-  const [mobileMode,   setMobileMode]   = useState<GenerationMode>('prompt');
-  const [desktopMode,  setDesktopMode]  = useState<GenerationMode | 'people'>('shortfilm');
-  const [drawerOpen,   setDrawerOpen]   = useState(false);
+  const [mobileTab,   setMobileTab]   = useState<MobileTab>('videos');
+  const [mobileMode,  setMobileMode]  = useState<GenerationMode>('photo-animate');
+  const [desktopMode, setDesktopMode] = useState<GenerationMode | 'people'>('photo-animate');
+  const [drawerOpen,  setDrawerOpen]  = useState(false);
 
   const isMobile = useIsMobile();
 
@@ -107,7 +107,7 @@ export default function StudioPage() {
     settings,
     updateStyle, updateAspectRatio, updatePlatform,
     updateResolution, updateDuration, updateMotion, updateCreativity,
-    toggleCharacter,
+    updateCameraMotion, toggleCharacter,
   } = useGenerationSettings();
 
   const { generations, isGenerating, addGeneration, deleteGeneration } = useGenerations();
@@ -116,12 +116,8 @@ export default function StudioPage() {
   useEffect(() => {
     const tpl = (location.state as { template?: { style: string } } | null)?.template;
     if (!tpl) return;
-    const styleMap: Record<string, Parameters<typeof updateStyle>[0]> = {
-      'Realistic': 'realistic', 'Anime': 'anime', '3D Animation': '3d',
-    };
-    if (styleMap[tpl.style]) updateStyle(styleMap[tpl.style]);
-    if (isMobile) setMobileMode('prompt');
-    else setDesktopMode('prompt');
+    if (isMobile) setMobileMode('photo-animate');
+    else setDesktopMode('photo-animate');
   }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGenerate = (prompt: string, story?: FilmStory) => {
@@ -154,22 +150,23 @@ export default function StudioPage() {
   const drawerProps = {
     settings,
     plan: MOCK_PLAN,
-    onStyleChange:      updateStyle,
-    onRatioChange:      updateAspectRatio,
-    onDurationChange:   updateDuration,
-    onPlatformChange:   updatePlatform,
-    onResolutionChange: updateResolution,
-    onMotionChange:     updateMotion,
-    onCreativityChange: updateCreativity,
+    onStyleChange:        updateStyle,
+    onRatioChange:        updateAspectRatio,
+    onDurationChange:     updateDuration,
+    onPlatformChange:     updatePlatform,
+    onResolutionChange:   updateResolution,
+    onMotionChange:       updateMotion,
+    onCreativityChange:   updateCreativity,
+    onCameraMotionChange: updateCameraMotion,
   };
 
   const videoGridProps = {
     generations,
     isGenerating,
-    onDelete: deleteGeneration,
-    onPlay:   (gen: VideoGeneration) => setPlayingGeneration(gen),
-    onShare:  (gen: VideoGeneration) => setSharingGeneration(gen),
-    onNewClick: () => setDesktopMode('prompt'),
+    onDelete:   deleteGeneration,
+    onPlay:     (gen: VideoGeneration) => setPlayingGeneration(gen),
+    onShare:    (gen: VideoGeneration) => setSharingGeneration(gen),
+    onNewClick: () => setDesktopMode('photo-animate'),
   };
 
   const characterPanelProps = {
@@ -180,10 +177,10 @@ export default function StudioPage() {
     onToggleSelect: toggleCharacter,
   };
 
-  // ── Film creator two-panel layout ─────────────────────────────────────────
+  // Two-panel layout used by film creators
   const filmPanel = (creator: React.ReactNode) => (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
-      <div style={{ width: 340, flexShrink: 0, borderRight: '1px solid #D8D6EE', overflowY: 'auto', background: '#fff' }}>
+      <div style={{ width: 340, flexShrink: 0, borderRight: '1px solid var(--border)', overflowY: 'auto', background: 'var(--surface)' }}>
         {creator}
       </div>
       <VideoGrid {...videoGridProps} onNewClick={() => {}} />
@@ -196,26 +193,36 @@ export default function StudioPage() {
       <>
         <div style={{ display: 'grid', gridTemplateRows: 'var(--nav-height) 1fr var(--bottom-nav-height)', height: '100dvh', overflow: 'hidden' }}>
           <Navbar mobile />
-          <main style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#F7F6FF' }}>
+          <main style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
             {mobileTab === 'studio' && (
               <>
-                <PromptInput
-                  isGenerating={isGenerating}
-                  characters={characters}
-                  selectedCharacterIds={settings.selectedCharacters}
-                  onToggleCharacter={toggleCharacter}
-                  mode={mobileMode}
-                  onModeChange={setMobileMode}
-                  onGenerate={p => handleGenerate(p)}
-                />
+                {mobileMode === 'photo-animate' && (
+                  <PhotoAnimateCreator
+                    settings={settings} isGenerating={isGenerating}
+                    onStyleChange={updateStyle} onCameraMotionChange={updateCameraMotion}
+                    onDurationChange={updateDuration} onMotionChange={updateMotion}
+                    onGenerate={p => handleGenerate(p)}
+                  />
+                )}
                 {mobileMode === 'story'  && <StoryWriter characters={characters} onGenerate={(p, s) => handleGenerate(p, s)} isGenerating={isGenerating} />}
                 {mobileMode === 'camera' && <CameraCapture settings={settings} onCapture={handleCapture} />}
+                {(mobileMode === 'prompt' || mobileMode === 'shortfilm') && (
+                  <PromptInput
+                    isGenerating={isGenerating}
+                    characters={characters}
+                    selectedCharacterIds={settings.selectedCharacters}
+                    onToggleCharacter={toggleCharacter}
+                    mode={mobileMode}
+                    onModeChange={setMobileMode}
+                    onGenerate={p => handleGenerate(p)}
+                  />
+                )}
               </>
             )}
-            {mobileTab === 'videos' && <VideoGrid {...videoGridProps} onNewClick={() => { setMobileTab('studio'); setMobileMode('prompt'); }} />}
-            {mobileTab === 'people' && <CharacterPanel mobile {...characterPanelProps} />}
-            {mobileTab === 'style'  && <LeftSidebar  mobile {...sharedSidebarProps} />}
-            {mobileTab === 'output' && <RightSidebar mobile {...sharedRightProps} />}
+            {mobileTab === 'videos'  && <VideoGrid {...videoGridProps} onNewClick={() => { setMobileTab('studio'); setMobileMode('photo-animate'); }} />}
+            {mobileTab === 'people'  && <CharacterPanel mobile {...characterPanelProps} />}
+            {mobileTab === 'style'   && <LeftSidebar  mobile {...sharedSidebarProps} />}
+            {mobileTab === 'output'  && <RightSidebar mobile {...sharedRightProps} />}
           </main>
           <MobileBottomNav activeTab={mobileTab} onChange={setMobileTab} />
         </div>
@@ -226,24 +233,19 @@ export default function StudioPage() {
   }
 
   // ── Desktop ───────────────────────────────────────────────────────────────
-  const creditsLeft = MOCK_PLAN.creditsTotal - MOCK_PLAN.creditsUsed;
-
-  // Tabs that appear as primary navigation
-  const visibleModes: (GenerationMode | 'people')[] = ['shortfilm', 'anime', '3dfilm', 'camera', 'people'];
-  // If desktopMode is prompt/story (set by template nav), include it too
-  if (desktopMode === 'prompt' || desktopMode === 'story') {
-    visibleModes.push(desktopMode);
-  }
+  const creditsLeft  = MOCK_PLAN.creditsTotal - MOCK_PLAN.creditsUsed;
+  const visibleModes: (GenerationMode | 'people')[] = ['photo-animate', 'shortfilm', '3dfilm', 'camera', 'people'];
+  if (desktopMode === 'prompt' || desktopMode === 'story') visibleModes.push(desktopMode);
 
   const tabItems = visibleModes.map(id => ({ key: id, label: MODE_LABELS[id] ?? id }));
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#F7F6FF' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
         <Navbar />
 
         {/* Mode tab bar */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #D8D6EE', flexShrink: 0 }}>
+        <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', padding: '0 24px' }}>
             <div style={{ flex: 1 }}>
               <Tabs
@@ -257,7 +259,6 @@ export default function StudioPage() {
             <Space size="small" style={{ flexShrink: 0, paddingBottom: 2 }}>
               <Tag
                 icon={<ThunderboltOutlined />}
-                color="purple"
                 style={{ cursor: 'default', margin: 0 }}
               >
                 {creditsLeft} credits
@@ -274,12 +275,17 @@ export default function StudioPage() {
         </div>
 
         {/* Content */}
-        <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+          {desktopMode === 'photo-animate' && filmPanel(
+            <PhotoAnimateCreator
+              settings={settings} isGenerating={isGenerating}
+              onStyleChange={updateStyle} onCameraMotionChange={updateCameraMotion}
+              onDurationChange={updateDuration} onMotionChange={updateMotion}
+              onGenerate={p => handleGenerate(p)}
+            />
+          )}
           {desktopMode === 'shortfilm' && filmPanel(
             <ShortFilmCreator settings={settings} characters={characters} isGenerating={isGenerating} onStyleChange={updateStyle} onGenerate={(p, s) => handleGenerate(p, s)} />
-          )}
-          {desktopMode === 'anime' && filmPanel(
-            <AnimeCreator settings={settings} characters={characters} isGenerating={isGenerating} onStyleChange={updateStyle} onGenerate={(p, s) => handleGenerate(p, s)} />
           )}
           {desktopMode === '3dfilm' && filmPanel(
             <ThreeDCreator settings={settings} characters={characters} isGenerating={isGenerating} onStyleChange={updateStyle} onGenerate={(p, s) => handleGenerate(p, s)} />

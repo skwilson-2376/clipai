@@ -5,10 +5,9 @@ import {
   Typography, Divider, Button, Space,
 } from 'antd';
 import { RocketOutlined } from '@ant-design/icons';
-import type {
-  Resolution, VideoStyle, AspectRatio, Platform, UserPlan,
-} from '../../types';
+import type { Resolution, VideoStyle, AspectRatio, Platform, UserPlan, CameraMotion } from '../../types';
 import type { GenerationSettings } from '../../types';
+import { ANIMATION_STYLE_META, CAMERA_MOTION_META } from '../../constants/thumbnailGradients';
 
 const { Text } = Typography;
 
@@ -24,10 +23,11 @@ interface Props {
   onResolutionChange: (r: Resolution) => void;
   onMotionChange: (v: number) => void;
   onCreativityChange: (v: number) => void;
+  onCameraMotionChange: (m: CameraMotion) => void;
 }
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+  <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, color: '#6A8898' }}>
     {children}
   </Text>
 );
@@ -36,7 +36,7 @@ const Row: React.FC<{ label: string; value: string | number; children: React.Rea
   <div style={{ marginBottom: 20 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
       <Label>{label}</Label>
-      <Text style={{ color: '#7C5CFC', fontSize: 13, fontWeight: 600 }}>{value}</Text>
+      <Text style={{ color: '#7AABB8', fontSize: 13, fontWeight: 700 }}>{value}</Text>
     </div>
     {children}
   </div>
@@ -45,65 +45,125 @@ const Row: React.FC<{ label: string; value: string | number; children: React.Rea
 export const SettingsDrawer: React.FC<Props> = ({
   open, onClose, settings, plan,
   onStyleChange, onRatioChange, onDurationChange,
-  onPlatformChange, onResolutionChange, onMotionChange, onCreativityChange,
+  onPlatformChange, onResolutionChange, onMotionChange,
+  onCreativityChange, onCameraMotionChange,
 }) => {
   const navigate    = useNavigate();
   const creditsLeft = plan.creditsTotal - plan.creditsUsed;
   const creditsPct  = Math.round((plan.creditsUsed / plan.creditsTotal) * 100);
 
+  const styleOptions = Object.entries(ANIMATION_STYLE_META).map(([value, meta]) => ({
+    label: `${meta.icon} ${meta.label}`,
+    value,
+  }));
+
+  const cameraOptions = Object.entries(CAMERA_MOTION_META).map(([value, meta]) => ({
+    label: `${meta.icon} ${meta.label}`,
+    value,
+  }));
+
   return (
     <Drawer
       title="Generation Settings"
       placement="right"
-      width={320}
       open={open}
       onClose={onClose}
-      styles={{ body: { paddingTop: 20 } }}
+      styles={{ wrapper: { width: 320 }, body: { paddingTop: 20, background: 'var(--surface)', overflowY: 'auto' } }}
     >
       {/* Credits */}
-      <div style={{ background: 'linear-gradient(135deg, rgba(124,92,252,0.08), rgba(252,92,173,0.05))', border: '1px solid rgba(124,92,252,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(122,171,184,0.08), rgba(90,112,72,0.08))',
+        border: '1px solid rgba(122,171,184,0.20)',
+        borderRadius: 12, padding: '14px 16px', marginBottom: 20,
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-          <Text strong style={{ color: '#7C5CFC' }}>{plan.name}</Text>
-          <Text style={{ fontSize: 18, fontWeight: 700, color: '#1A1829' }}>
-            {creditsLeft} <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>credits left</Text>
+          <Text style={{ fontWeight: 700, color: '#7AABB8' }}>{plan.name}</Text>
+          <Text style={{ fontSize: 18, fontWeight: 700, color: '#C8D8E4' }}>
+            {creditsLeft} <Text style={{ fontSize: 12, fontWeight: 400, color: '#6A8898' }}>credits left</Text>
           </Text>
         </div>
         <Progress
           percent={creditsPct}
-          strokeColor={{ '0%': '#7C5CFC', '100%': '#FC5CAD' }}
+          strokeColor={{ '0%': '#3A6070', '100%': '#7AABB8' }}
           size="small"
           showInfo={false}
           style={{ marginBottom: 4 }}
         />
-        <Text type="secondary" style={{ fontSize: 11 }}>{plan.creditsUsed} of {plan.creditsTotal} used this month</Text>
+        <Text style={{ fontSize: 11, color: '#6A8898' }}>{plan.creditsUsed} of {plan.creditsTotal} used this month</Text>
         <Button
           type="primary"
           size="small"
           icon={<RocketOutlined />}
           block
-          style={{ marginTop: 10, background: 'linear-gradient(135deg,#7C5CFC,#FC5CAD)', border: 'none' }}
+          style={{ marginTop: 10, background: 'var(--grad-primary)', border: 'none' }}
           onClick={() => { onClose(); navigate('/pricing'); }}
         >
           Upgrade to Unlimited
         </Button>
       </div>
 
-      <Divider style={{ margin: '16px 0' }} />
+      <Divider />
 
-      {/* Style */}
+      {/* Animation Style */}
       <div style={{ marginBottom: 20 }}>
-        <Label>Video Style</Label>
-        <Segmented
-          block
-          style={{ marginTop: 10 }}
-          options={[
-            { label: '🎬 Real', value: 'realistic' },
-            { label: '✨ Anime', value: 'anime' },
-            { label: '🎮 3D', value: '3d' },
-          ]}
-          value={settings.style}
-          onChange={v => onStyleChange(v as VideoStyle)}
-        />
+        <Label>Animation Style</Label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginTop: 10 }}>
+          {styleOptions.map(({ value, label }) => {
+            const active = settings.style === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onStyleChange(value as VideoStyle)}
+                style={{
+                  padding: '8px 6px',
+                  borderRadius: 8,
+                  border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active ? 'rgba(122,171,184,0.12)' : 'var(--surface2)',
+                  color: active ? '#7AABB8' : '#6A8898',
+                  fontSize: 11, fontWeight: active ? 700 : 400,
+                  cursor: 'pointer', textAlign: 'left',
+                  fontFamily: 'var(--font-body)',
+                  transition: 'all 0.15s',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Camera Motion */}
+      <div style={{ marginBottom: 20 }}>
+        <Label>Camera Motion</Label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginTop: 10 }}>
+          {cameraOptions.map(({ value, label }) => {
+            const active = settings.cameraMotion === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onCameraMotionChange(value as CameraMotion)}
+                style={{
+                  padding: '8px 6px',
+                  borderRadius: 8,
+                  border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active ? 'rgba(122,171,184,0.12)' : 'var(--surface2)',
+                  color: active ? '#7AABB8' : '#6A8898',
+                  fontSize: 11, fontWeight: active ? 700 : 400,
+                  cursor: 'pointer', textAlign: 'left',
+                  fontFamily: 'var(--font-body)',
+                  transition: 'all 0.15s',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Aspect Ratio */}
@@ -114,7 +174,7 @@ export const SettingsDrawer: React.FC<Props> = ({
           style={{ marginTop: 10 }}
           options={[
             { label: '9:16', value: '9:16' },
-            { label: '1:1', value: '1:1' },
+            { label: '1:1',  value: '1:1'  },
             { label: '16:9', value: '16:9' },
           ]}
           value={settings.aspectRatio}
@@ -124,15 +184,10 @@ export const SettingsDrawer: React.FC<Props> = ({
 
       {/* Duration */}
       <Row label="Duration" value={`${settings.duration}s`}>
-        <Slider
-          min={3} max={30}
-          value={settings.duration}
-          onChange={onDurationChange}
-          tooltip={{ formatter: v => `${v}s` }}
-        />
+        <Slider min={3} max={30} value={settings.duration} onChange={onDurationChange} tooltip={{ formatter: v => `${v}s` }} />
       </Row>
 
-      <Divider style={{ margin: '16px 0' }} />
+      <Divider />
 
       {/* Resolution */}
       <div style={{ marginBottom: 20 }}>
@@ -148,39 +203,32 @@ export const SettingsDrawer: React.FC<Props> = ({
 
       {/* Motion */}
       <Row label="Motion Intensity" value={`${settings.motionIntensity}%`}>
-        <Slider
-          min={0} max={100}
-          value={settings.motionIntensity}
-          onChange={onMotionChange}
-        />
+        <Slider min={0} max={100} value={settings.motionIntensity} onChange={onMotionChange} />
       </Row>
 
       {/* Creativity */}
       <Row label="Creativity" value={settings.creativity}>
-        <Slider
-          min={1} max={10}
-          value={settings.creativity}
-          onChange={onCreativityChange}
-        />
+        <Slider min={1} max={10} value={settings.creativity} onChange={onCreativityChange} />
       </Row>
 
-      <Divider style={{ margin: '16px 0' }} />
+      <Divider />
 
       {/* Platform share links */}
       <div>
         <Label>Share to Platform</Label>
         <Space wrap style={{ marginTop: 10 }}>
           {([
-            { id: 'TikTok' as Platform,  url: 'https://www.tiktok.com/upload'             },
-            { id: 'Reels'  as Platform,  url: 'https://www.instagram.com/reels/create/'   },
-            { id: 'Shorts' as Platform,  url: 'https://studio.youtube.com/'               },
-            { id: 'Twitter'as Platform,  url: 'https://twitter.com/intent/tweet'          },
+            { id: 'TikTok'  as Platform, url: 'https://www.tiktok.com/upload'           },
+            { id: 'Reels'   as Platform, url: 'https://www.instagram.com/reels/create/' },
+            { id: 'Shorts'  as Platform, url: 'https://studio.youtube.com/'             },
+            { id: 'Twitter' as Platform, url: 'https://twitter.com/intent/tweet'        },
           ]).map(({ id, url }) => (
             <Button
               key={id}
               size="small"
               type={settings.platform === id ? 'primary' : 'default'}
               onClick={() => { onPlatformChange(id); window.open(url, '_blank', 'noopener,noreferrer'); }}
+              style={settings.platform === id ? { background: 'var(--grad-primary)', border: 'none' } : {}}
             >
               {id}
             </Button>

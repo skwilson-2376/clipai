@@ -25,12 +25,13 @@ export const Navbar: React.FC<NavbarProps> = ({ mobile = false }) => {
         display: 'flex',
         alignItems: 'center',
         padding: '0 24px',
-        background: '#fff',
-        borderBottom: '1px solid #D8D6EE',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
         gap: 8,
+        backdropFilter: 'blur(12px)',
       }}
     >
       {/* Logo */}
@@ -45,15 +46,26 @@ export const Navbar: React.FC<NavbarProps> = ({ mobile = false }) => {
           userSelect: 'none',
           display: 'flex',
           alignItems: 'center',
+          gap: 2,
           marginRight: 8,
           flexShrink: 0,
         }}
       >
-        <span style={{ background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Clip</span>
-        <span style={{ color: 'var(--accent3)' }}>AI</span>
+        {/* Silver metallic logo text */}
+        <span style={{ background: 'var(--metal-silver)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          AnimFilm
+        </span>
       </div>
 
-      <Tag color="purple" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', marginRight: 8 }}>BETA</Tag>
+      <Tag
+        style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: '0.8px',
+          marginRight: 8, background: 'rgba(122,171,184,0.12)',
+          borderColor: 'rgba(122,171,184,0.28)', color: '#7AABB8',
+        }}
+      >
+        BETA
+      </Tag>
 
       {/* Nav links */}
       {!mobile && (
@@ -67,15 +79,15 @@ export const Navbar: React.FC<NavbarProps> = ({ mobile = false }) => {
                 padding: '5px 12px',
                 borderRadius: 8,
                 border: 'none',
-                background: active === label ? 'rgba(124,92,252,0.08)' : 'transparent',
-                color: active === label ? '#7C5CFC' : '#5C5A74',
+                background: active === label ? 'rgba(122,171,184,0.10)' : 'transparent',
+                color: active === label ? '#7AABB8' : '#6A8898',
                 fontSize: 13,
                 fontWeight: active === label ? 600 : 400,
                 cursor: 'pointer',
                 fontFamily: 'var(--font-body)',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { if (active !== label) e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+              onMouseEnter={e => { if (active !== label) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
               onMouseLeave={e => { if (active !== label) e.currentTarget.style.background = 'transparent'; }}
             >
               {label}
@@ -87,18 +99,27 @@ export const Navbar: React.FC<NavbarProps> = ({ mobile = false }) => {
       {/* Actions */}
       <Space style={{ marginLeft: 'auto' }}>
         {mobile ? (
-          <Button type="primary" size="small" onClick={() => navigate('/signup')}>
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => navigate('/signup')}
+            style={{ background: 'var(--grad-primary)', border: 'none' }}
+          >
             Sign up
           </Button>
         ) : (
           <>
-            <Button type="text" onClick={() => navigate('/login')} style={{ color: '#5C5A74' }}>
+            <Button
+              type="text"
+              onClick={() => navigate('/login')}
+              style={{ color: '#6A8898' }}
+            >
               Log in
             </Button>
             <Button
               type="primary"
               onClick={() => navigate('/signup')}
-              style={{ background: 'linear-gradient(135deg,#7C5CFC,#FC5CAD)', border: 'none' }}
+              style={{ background: 'var(--grad-primary)', border: 'none' }}
             >
               Sign up free
             </Button>

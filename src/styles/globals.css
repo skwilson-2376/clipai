@@ -1,4 +1,4 @@
-/* globals.css — ClipAI Design System */
+/* globals.css — AnimFilm Design System — Deep Sea Metallic */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
 
 *, *::before, *::after {
@@ -8,40 +8,56 @@
 }
 
 :root {
-  --bg:          #F7F6FF;
-  --surface:     #FFFFFF;
-  --surface2:    #EEEDF8;
-  --surface3:    #E5E3F2;
-  --border:      #D8D6EE;
-  --border2:     #C4C1E0;
+  /* ── Backgrounds ──────────────────────────── */
+  --bg:        #070C14;   /* deep ocean black    */
+  --surface:   #0D1720;   /* dark navy panel     */
+  --surface2:  #132030;   /* mid navy            */
+  --surface3:  #1A2A38;   /* lighter panel       */
 
-  --accent:      #7C5CFC;
-  --accent-mid:  #9B7FFC;
-  --accent2:     #FC5CAD;
-  --accent3:     #0BC4CC;
+  /* ── Borders ─────────────────────────────── */
+  --border:    #1E3040;
+  --border2:   #2A3F52;
 
-  --text:        #1A1829;
-  --text-muted:  #5C5A74;
-  --text-faint:  #8E8CA6;
+  /* ── Accent colours ──────────────────────── */
+  --accent:     #7AABB8;   /* silver-teal metallic */
+  --accent-mid: #94BDC8;   /* lighter silver-teal  */
+  --accent2:    #5A7048;   /* dark olive metallic  */
+  --accent3:    #3D6578;   /* deep sea teal        */
 
-  --pill-bg:     rgba(124, 92, 252, 0.10);
-  --pill-border: rgba(124, 92, 252, 0.28);
+  /* ── Text ────────────────────────────────── */
+  --text:        #C8D8E4;  /* silver-white        */
+  --text-muted:  #6A8898;  /* muted silver-blue   */
+  --text-faint:  #3A5265;  /* faint blue-grey     */
 
-  --grad-primary: linear-gradient(135deg, #7C5CFC, #FC5CAD);
-  --grad-subtle:  linear-gradient(135deg, rgba(124,92,252,0.10), rgba(252,92,173,0.06));
+  /* ── Pill / tag ─────────────────────────── */
+  --pill-bg:     rgba(122, 171, 184, 0.12);
+  --pill-border: rgba(122, 171, 184, 0.28);
 
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   20px;
+  /* ── Gradients ───────────────────────────── */
+  --grad-primary: linear-gradient(135deg, #3A6070, #7AABB8, #6A8850);
+  --grad-subtle:  linear-gradient(135deg, rgba(58,96,112,0.18), rgba(106,136,80,0.10));
 
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.12);
-  --shadow-glow: 0 0 24px rgba(124,92,252,0.20);
+  /* ── Metallic surface gradients ─────────── */
+  --metal-silver: linear-gradient(145deg, #3A5A6A, #A0BCCA, #3A5A6A);
+  --metal-olive:  linear-gradient(145deg, #2A3A20, #5A7040, #2A3A20);
+  --metal-deep:   linear-gradient(145deg, #080E18, #1A3040, #080E18);
 
+  /* ── Radius ──────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* ── Shadows ─────────────────────────────── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:   0 4px 20px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 28px rgba(122,171,184,0.18);
+
+  /* ── Typography ──────────────────────────── */
   --font-display: 'Syne', sans-serif;
   --font-body:    'DM Sans', sans-serif;
 
+  /* ── Layout ──────────────────────────────── */
   --sidebar-width:       260px;
   --sidebar-right-width: 280px;
   --nav-height:          56px;
@@ -89,7 +105,7 @@ input[type='range']::-webkit-slider-thumb {
   height: 14px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 6px rgba(124,92,252,0.5);
+  box-shadow: 0 0 6px rgba(122,171,184,0.5);
   transition: transform 0.15s;
 }
 input[type='range']::-webkit-slider-thumb:hover {
@@ -100,14 +116,14 @@ textarea {
   field-sizing: content;
 }
 
-/* Animations */
+/* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 8px rgba(124,92,252,0.3); }
-  50%       { box-shadow: 0 0 20px rgba(124,92,252,0.6); }
+  0%, 100% { box-shadow: 0 0 8px rgba(122,171,184,0.25); }
+  50%       { box-shadow: 0 0 24px rgba(122,171,184,0.55); }
 }
 
 @keyframes slide-in-up {
@@ -120,34 +136,85 @@ textarea {
   to   { opacity: 1; }
 }
 
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
 .animate-spin       { animation: spin 1s linear infinite; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-slide-up   { animation: slide-in-up 0.3s ease forwards; }
 .animate-fade-in    { animation: fade-in 0.25s ease forwards; }
+.animate-shimmer    {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 200% auto;
+  animation: shimmer 1.8s linear infinite;
+}
 
-/* ── Ant Design overrides ──────────────────────────────────────────────────── */
+/* ── Ant Design dark overrides ─────────────────────────────────────────────── */
 
-/* Flush tab bar bottom border with wrapper border */
-.ant-tabs .ant-tabs-nav::before { border-bottom-color: transparent !important; }
+/* Flush tab bar bottom border */
+.ant-tabs .ant-tabs-nav::before { border-bottom-color: var(--border) !important; }
 
 /* Remove default tab content padding */
 .ant-tabs-top > .ant-tabs-content-holder { border: none; }
 
-/* Segmented: softer look */
-.ant-segmented { background: #EEEDF8; }
+/* Segmented */
+.ant-segmented { background: var(--surface3) !important; }
+.ant-segmented-item { color: var(--text-muted) !important; }
+.ant-segmented-item-selected { color: var(--bg) !important; }
 
-/* Slider track uses primary colour (already set via token, this is a fallback) */
-.ant-slider-track { background-color: #7C5CFC !important; }
+/* Slider */
+.ant-slider-track { background-color: var(--accent) !important; }
+.ant-slider-rail  { background-color: var(--border2) !important; }
 
-/* Drawer title font */
-.ant-drawer-title {
+/* Drawer dark bg */
+.ant-drawer-content  { background: var(--surface) !important; }
+.ant-drawer-header   { background: var(--surface) !important; border-bottom-color: var(--border) !important; }
+.ant-drawer-title    {
   font-family: 'Syne', sans-serif;
   font-weight: 700;
-  color: #1A1829;
+  color: var(--text) !important;
+}
+.ant-drawer-close    { color: var(--text-muted) !important; }
+
+/* Divider in dark mode */
+.ant-divider { border-color: var(--border) !important; }
+
+/* Button */
+.ant-btn { transition: all 0.15s !important; }
+.ant-btn-default {
+  background: var(--surface2) !important;
+  border-color: var(--border2) !important;
+  color: var(--text-muted) !important;
+}
+.ant-btn-default:hover {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
 }
 
-/* Smooth button transitions */
-.ant-btn { transition: all 0.15s !important; }
-
-/* Tag pill style */
+/* Tag */
 .ant-tag { border-radius: 20px; }
+
+/* Typography */
+.ant-typography { color: var(--text) !important; }
+.ant-typography.ant-typography-secondary { color: var(--text-muted) !important; }
+
+/* Select dropdown */
+.ant-select-dropdown {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border2) !important;
+}
+.ant-select-item { color: var(--text-muted) !important; }
+.ant-select-item-option-active,
+.ant-select-item-option-selected { background: var(--surface3) !important; color: var(--accent) !important; }
+.ant-select-selector {
+  background: var(--surface2) !important;
+  border-color: var(--border2) !important;
+  color: var(--text) !important;
+}
+
+/* Progress rail */
+.ant-progress-inner { background: var(--surface3) !important; }
+
+/* Tabs item colours are set via ConfigProvider tokens */

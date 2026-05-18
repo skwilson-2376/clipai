@@ -3,13 +3,16 @@ import { Tabs, Empty } from 'antd';
 import type { VideoGeneration, VideoStyle } from '../../types';
 import { VideoCard, NewVideoCard } from './VideoCard';
 
-type FilterTab = 'All' | VideoStyle;
+type FilterTab = 'all' | VideoStyle;
 
 const TAB_ITEMS = [
-  { key: 'All',       label: 'All Videos'   },
-  { key: 'realistic', label: 'Realistic'     },
-  { key: 'anime',     label: 'Anime'         },
-  { key: '3d',        label: '3D Animation'  },
+  { key: 'all',           label: 'All'          },
+  { key: 'parallax-3d',   label: '🌊 Parallax 3D' },
+  { key: 'smooth-cinema', label: '🎞️ Cinema'      },
+  { key: 'clay-motion',   label: '🏺 Clay'        },
+  { key: 'cel-animation', label: '✒️ Cel'         },
+  { key: 'ken-burns',     label: '📽️ Ken Burns'   },
+  { key: 'watercolor',    label: '🖌️ Watercolor'  },
 ];
 
 interface VideoGridProps {
@@ -22,16 +25,11 @@ interface VideoGridProps {
 }
 
 export const VideoGrid: React.FC<VideoGridProps> = ({
-  generations,
-  isGenerating,
-  onDelete,
-  onPlay,
-  onShare,
-  onNewClick,
+  generations, isGenerating, onDelete, onPlay, onShare, onNewClick,
 }) => {
-  const [activeTab, setActiveTab] = useState<FilterTab>('All');
+  const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-  const filtered = activeTab === 'All'
+  const filtered = activeTab === 'all'
     ? generations
     : generations.filter(g => g.style === activeTab);
 
@@ -39,14 +37,14 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
   const recent     = filtered.filter(g => g.status === 'done' || g.status === 'failed');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: 'var(--bg)' }}>
       <Tabs
         activeKey={activeTab}
         onChange={k => setActiveTab(k as FilterTab)}
         size="small"
         items={TAB_ITEMS}
-        style={{ background: '#fff' }}
-        tabBarStyle={{ padding: '0 24px', marginBottom: 0, borderBottom: '1px solid #D8D6EE' }}
+        style={{ background: 'var(--surface)' }}
+        tabBarStyle={{ padding: '0 24px', marginBottom: 0, borderBottom: '1px solid var(--border)' }}
       />
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
@@ -56,8 +54,8 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
           <div
             className="animate-slide-up"
             style={{
-              background: 'rgba(124,92,252,0.08)',
-              border: '1px solid rgba(124,92,252,0.25)',
+              background: 'rgba(122,171,184,0.07)',
+              border: '1px solid rgba(122,171,184,0.20)',
               borderRadius: 10,
               padding: '12px 16px',
               marginBottom: 20,
@@ -67,12 +65,12 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
             }}
           >
             <div
-              style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(124,92,252,0.3)', borderTopColor: '#7C5CFC', flexShrink: 0 }}
+              style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(122,171,184,0.3)', borderTopColor: '#7AABB8', flexShrink: 0 }}
               className="animate-spin"
             />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1829' }}>Generating your video…</div>
-              <div style={{ fontSize: 11, color: '#8E8CA6' }}>Usually takes 20–40 seconds</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Generating your animation…</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Applying depth estimation &amp; motion synthesis</div>
             </div>
           </div>
         )}
@@ -80,7 +78,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
         {/* In-progress cards */}
         {inProgress.length > 0 && (
           <section style={{ marginBottom: 28 }}>
-            <SectionHeader title="In Progress" />
+            <SectionHeader title="Rendering" />
             <div style={gridStyle}>
               {inProgress.map(gen => (
                 <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} onShare={onShare} />
@@ -91,7 +89,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
         {/* Recent */}
         <section style={{ marginBottom: 28 }}>
-          {recent.length > 0 && <SectionHeader title="Recent Generations" />}
+          {recent.length > 0 && <SectionHeader title="Your Animations" />}
           <div style={gridStyle}>
             {recent.map(gen => (
               <VideoCard key={gen.id} generation={gen} onDelete={onDelete} onPlay={onPlay} onShare={onShare} />
@@ -105,8 +103,8 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
-              <span style={{ color: '#8E8CA6' }}>
-                No videos yet — create your first one above
+              <span style={{ color: 'var(--text-faint)' }}>
+                No animations yet — upload a photo and create your first one
               </span>
             }
             style={{ padding: '60px 0' }}
@@ -125,7 +123,7 @@ const gridStyle: React.CSSProperties = {
 
 const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
   <div style={{ marginBottom: 14 }}>
-    <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#1A1829' }}>
+    <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
       {title}
     </span>
   </div>
