@@ -22,7 +22,7 @@ export default function LoginPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        saveAuth(data.token, { id: data.id, name: data.name, email: data.email });
+        saveAuth(data.token, { id: data.id, name: data.name, email: data.email, role: data.role ?? 'user' });
         navigate('/studio');
       } else {
         const data = await res.json().catch(() => ({}));

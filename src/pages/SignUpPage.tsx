@@ -27,7 +27,7 @@ export default function SignUpPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        saveAuth(data.token, { id: data.id, name: data.name, email: data.email });
+        saveAuth(data.token, { id: data.id, name: data.name, email: data.email, role: data.role ?? 'user' });
         // Also log the sign-up (non-blocking)
         fetch('/api/logs', {
           method: 'POST',

@@ -7,6 +7,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface AuthState {
@@ -51,8 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (r.ok) return r.json();
         throw new Error('invalid');
       })
-      .then((data: { id: string; name: string; email: string; token: string }) => {
-        setState({ token: data.token, user: { id: data.id, name: data.name, email: data.email }, checked: true });
+      .then((data: { id: string; name: string; email: string; role: string; token: string }) => {
+        setState({ token: data.token, user: { id: data.id, name: data.name, email: data.email, role: data.role }, checked: true });
       })
       .catch(() => {
         // Token invalid/expired — clear it

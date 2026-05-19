@@ -28,6 +28,7 @@ pub struct AuthResponse {
     pub id:    String,
     pub name:  String,
     pub email: String,
+    pub role:  String,
     pub token: String,
 }
 
@@ -105,6 +106,7 @@ pub async fn register(
             id,
             name:  req.name.trim().to_string(),
             email: req.email.trim().to_string(),
+            role:  "user".to_string(),
             token,
         }),
     ))
@@ -117,8 +119,8 @@ pub async fn login(
 ) -> Result<Json<AuthResponse>, AppError> {
     let hash = hash_password(&req.password);
 
-    let row: Option<(String, String, String)> = sqlx::query_as(
-        "SELECT id, name, email FROM users WHERE email = ? AND password_hash = ?",
+    let row: Option<(String, String, String, String)> = sqlx::query_as(
+        "SELECT id, name, email, role FROM users WHERE email = ? AND password_hash = ?",
     )
     .bind(req.email.trim())
     .bind(&hash)
@@ -127,9 +129,9 @@ pub async fn login(
 
     match row {
         None => Err(AppError::Unauthorized),
-        Some((id, name, email)) => {
+        Some((id, name, email, role)) => {
             let token = create_session(&pool, &id).await?;
-            Ok(Json(AuthResponse { id, name, email, token }))
+            Ok(Json(AuthResponse { id, name, email, role, token }))
         }
     }
 }
@@ -141,8 +143,8 @@ pub async fn me(
 ) -> Result<Json<AuthResponse>, AppError> {
     let token = extract_bearer(&headers).ok_or(AppError::Unauthorized)?;
 
-    let row: Option<(String, String, String)> = sqlx::query_as(
-        "SELECT u.id, u.name, u.email
+    let row: Option<(String, String, String, String)> = sqlx::query_as(
+        "SELECT u.id, u.name, u.email, u.role
          FROM sessions s
          JOIN users u ON s.user_id = u.id
          WHERE s.token = ? AND s.expires_at > NOW()",
@@ -153,7 +155,7 @@ pub async fn me(
 
     match row {
         None => Err(AppError::Unauthorized),
-        Some((id, name, email)) => Ok(Json(AuthResponse { id, name, email, token })),
+        Some((id, name, email, role)) => Ok(Json(AuthResponse { id, name, email, role, token })),
     }
 }
 
