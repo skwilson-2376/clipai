@@ -25,11 +25,18 @@ export default function LoginPage() {
         saveAuth(data.token, { id: data.id, name: data.name, email: data.email, role: data.role ?? 'user' });
         navigate('/studio');
       } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? 'Invalid email or password.');
+        const data = await res.json().catch(() => null);
+        if (!data) {
+          // Backend is unreachable or returned a non-JSON error (proxy/crash)
+          setError('Cannot reach the server — make sure the backend is running (cargo run).');
+        } else if (res.status === 401) {
+          setError('Wrong email or password.');
+        } else {
+          setError(data.error ?? 'Something went wrong. Please try again.');
+        }
       }
     } catch {
-      setError('Network error — please try again.');
+      setError('Cannot reach the server — make sure the backend is running (cargo run).');
     } finally {
       setLoading(false);
     }
