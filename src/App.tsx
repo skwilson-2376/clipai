@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import './styles/globals.css';
 
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 import StudioPage    from './pages/StudioPage';
 import LibraryPage   from './pages/LibraryPage';
 import TemplatesPage from './pages/TemplatesPage';
@@ -9,6 +11,18 @@ import PricingPage   from './pages/PricingPage';
 import LoginPage     from './pages/LoginPage';
 import SignUpPage    from './pages/SignUpPage';
 import LogsPage      from './pages/LogsPage';
+
+// ── Route guard ───────────────────────────────────────────────────────────────
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { token, checked } = useAuth();
+  // Wait for the /api/auth/me check before deciding
+  if (!checked) return null;
+  if (!token)   return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
   return (
@@ -79,19 +93,24 @@ export default function App() {
         },
       }}
     >
-    <BrowserRouter>
-      <Routes>
-        <Route path="/"          element={<Navigate to="/studio" replace />} />
-        <Route path="/studio"    element={<StudioPage />} />
-        <Route path="/library"   element={<LibraryPage />} />
-        <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/pricing"   element={<PricingPage />} />
-        <Route path="/login"     element={<LoginPage />} />
-        <Route path="/signup"    element={<SignUpPage />} />
-        <Route path="/logs"      element={<LogsPage />} />
-        <Route path="*"          element={<Navigate to="/studio" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public */}
+            <Route path="/login"    element={<LoginPage />} />
+            <Route path="/signup"   element={<SignUpPage />} />
+            <Route path="/pricing"  element={<PricingPage />} />
+
+            {/* Protected */}
+            <Route path="/"          element={<Navigate to="/studio" replace />} />
+            <Route path="/studio"    element={<RequireAuth><StudioPage /></RequireAuth>} />
+            <Route path="/library"   element={<RequireAuth><LibraryPage /></RequireAuth>} />
+            <Route path="/templates" element={<RequireAuth><TemplatesPage /></RequireAuth>} />
+            <Route path="/logs"      element={<RequireAuth><LogsPage /></RequireAuth>} />
+            <Route path="*"          element={<Navigate to="/studio" replace />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
     </ConfigProvider>
   );
 }

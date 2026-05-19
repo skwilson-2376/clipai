@@ -1,10 +1,60 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type React from 'react';
-import type { FilmStory, VideoGeneration, GenerationSettings } from '../types';
+import type {
+  FilmStory, VideoGeneration, GenerationSettings,
+  VideoStyle, AspectRatio, Platform, Resolution, GenerationStatus,
+} from '../types';
 import { THUMB_GRADIENTS } from '../constants/thumbnailGradients';
 import { deleteVideoBlob } from '../lib/videoDB';
 
 const STORAGE_KEY = 'clipai_generations';
+// For mobile (Capacitor) builds set VITE_API_URL=http://your-server:8080 in .env
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+
+// ── DB sync helpers ───────────────────────────────────────────────────────────
+
+interface DbGeneration {
+  id: string; prompt: string; style: string; aspectRatio: string;
+  platform: string; resolution: string; duration: number;
+  motionIntensity: number; creativity: number; status: string;
+  progress: number; videoUrl: string | null;
+  thumbnailGradient: string | null; isUploaded: number; createdAt: string;
+}
+
+function getStoredToken(): string | null {
+  try {
+    const raw = localStorage.getItem('clipai_auth');
+    if (raw) return (JSON.parse(raw) as { token?: string }).token ?? null;
+  } catch {}
+  return null;
+}
+
+function dbToGeneration(db: DbGeneration): VideoGeneration {
+  return {
+    id: db.id, prompt: db.prompt,
+    style: db.style as VideoStyle, aspectRatio: db.aspectRatio as AspectRatio,
+    platform: db.platform as Platform, resolution: db.resolution as Resolution,
+    duration: db.duration, motionIntensity: db.motionIntensity, creativity: db.creativity,
+    status: db.status as GenerationStatus, progress: db.progress,
+    videoUrl: db.videoUrl ?? undefined, thumbnailGradient: db.thumbnailGradient ?? undefined,
+    isUploaded: Boolean(db.isUploaded), createdAt: new Date(db.createdAt),
+    cameraMotion: 'parallax',
+  };
+}
+
+function mergeWithDb(local: VideoGeneration[], dbItems: DbGeneration[]): VideoGeneration[] {
+  const dbMap = new Map(dbItems.map(d => [d.id, d]));
+  // Update existing local items where DB has newer state
+  const updated = local.map(g => {
+    const db = dbMap.get(g.id);
+    if (!db) return g;
+    return { ...g, status: db.status as GenerationStatus, progress: db.progress, videoUrl: db.videoUrl ?? g.videoUrl };
+  });
+  // Add items from DB that are missing from localStorage (e.g., generated elsewhere)
+  const localIds = new Set(local.map(g => g.id));
+  const newFromDb = dbItems.filter(d => !localIds.has(d.id)).map(dbToGeneration);
+  return [...newFromDb, ...updated].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
 
 // Free Google sample videos used for demo playback
 const SAMPLE_VIDEOS = [
@@ -155,6 +205,21 @@ export function useGenerations() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(generations));
   }, [generations]);
 
+  // Fetch from backend DB on mount and merge — so videos created in previous
+  // sessions (or on another device) are retrieved and shown.
+  useEffect(() => {
+    const token = getStoredToken();
+    const headers: HeadersInit = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    fetch(`${API_BASE}/api/generations`, { headers })
+      .then(r => r.ok ? r.json() as Promise<DbGeneration[]> : Promise.reject())
+      .then(dbItems => {
+        if (!mountedRef.current) return;
+        setGenerations(prev => mergeWithDb(prev, dbItems));
+      })
+      .catch(() => {}); // backend may be unreachable in demo/offline mode
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const addGeneration = useCallback(
     async (
       prompt: string,
@@ -197,15 +262,19 @@ export function useGenerations() {
       setIsGenerating(true);
       setGenerations(prev => [newGen, ...prev]);
 
-      // Submit generation job — abort after 4 s so the proxy hang doesn't stall the simulation
+      // Submit generation job — 30s timeout to accommodate large base64 photo uploads
       let jobId: string;
       const ctrl = new AbortController();
-      const abortTimer = setTimeout(() => ctrl.abort(), 4000);
+      const abortTimer = setTimeout(() => ctrl.abort(), 30000);
       try {
-        const res = await fetch('/api/generate', {
+        const res = await fetch(`${API_BASE}/api/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, ...settings }),
+          body: JSON.stringify({
+            prompt,
+            ...settings,
+            sourcePhotoUrl: sourcePhotoUrl ?? null,
+          }),
           signal: ctrl.signal,
         });
         clearTimeout(abortTimer);
@@ -229,7 +298,7 @@ export function useGenerations() {
         prev.map(g => g.id === tempId ? { ...g, id: jobId, status: 'processing' } : g)
       );
 
-      const es = new EventSource(`/api/status/${jobId}`);
+      const es = new EventSource(`${API_BASE}/api/status/${jobId}`);
       eventSourcesRef.current.set(jobId, es);
 
       es.onmessage = ({ data }) => {

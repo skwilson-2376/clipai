@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { saveAuth } = useAuth();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -19,6 +21,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email: email.trim(), password }),
       });
       if (res.ok) {
+        const data = await res.json();
+        saveAuth(data.token, { id: data.id, name: data.name, email: data.email });
         navigate('/studio');
       } else {
         const data = await res.json().catch(() => ({}));

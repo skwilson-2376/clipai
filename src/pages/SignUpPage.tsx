@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { saveAuth } = useAuth();
   const [name, setName]         = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +26,8 @@ export default function SignUpPage() {
         body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
       });
       if (res.ok) {
+        const data = await res.json();
+        saveAuth(data.token, { id: data.id, name: data.name, email: data.email });
         // Also log the sign-up (non-blocking)
         fetch('/api/logs', {
           method: 'POST',
