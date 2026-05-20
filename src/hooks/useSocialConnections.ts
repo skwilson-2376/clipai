@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+
 export type SocialPlatform = 'tiktok' | 'reels' | 'shorts' | 'twitter';
 
 export interface SocialConnections {
@@ -18,7 +20,7 @@ export function useSocialConnections(): SocialConnections {
 
   const fetchConnections = useCallback(async () => {
     try {
-      const res = await fetch('/api/connections');
+      const res = await fetch(`${API_BASE}/api/connections`);
       if (!res.ok) return;
       const platforms: string[] = await res.json();
       setConnected(new Set(platforms as SocialPlatform[]));
@@ -46,13 +48,12 @@ export function useSocialConnections(): SocialConnections {
   }, [fetchConnections]);
 
   const connect = useCallback((platform: SocialPlatform) => {
-    // Redirect through the backend OAuth start handler
-    window.location.href = `/api/oauth/${platform}/start`;
+    window.location.href = `${API_BASE}/api/oauth/${platform}/start`;
   }, []);
 
   const disconnect = useCallback(async (platform: SocialPlatform) => {
     try {
-      await fetch(`/api/connections/${platform}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/connections/${platform}`, { method: 'DELETE' });
     } catch {
       // ignore
     }

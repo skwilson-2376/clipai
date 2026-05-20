@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { saveAuth } = useAuth();
@@ -15,7 +17,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password }),

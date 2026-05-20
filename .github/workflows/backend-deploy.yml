@@ -1,0 +1,52 @@
+name: Backend — Build & Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/backend/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src/backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src/backend/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build release binary
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Package for deployment
+        run: |
+          mkdir -p deploy
+          cp target/x86_64-unknown-linux-gnu/release/clipai-backend deploy/
+          cp -r migrations deploy/
+          chmod +x deploy/clipai-backend
+          cd deploy && zip -r ../clipai-deploy.zip .
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: clipai
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: src/backend/clipai-deploy.zip

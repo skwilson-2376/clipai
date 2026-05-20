@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+
 interface LogEntry {
   id:         string;
   event:      string;
@@ -29,7 +31,7 @@ export default function LogsPage() {
   const [search, setSearch]   = useState('');
 
   useEffect(() => {
-    fetch('/api/logs')
+    fetch(`${API_BASE}/api/logs`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
