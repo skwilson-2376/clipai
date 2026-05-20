@@ -47,8 +47,13 @@ jobs:
           cd deploy && zip -r ../clipai-deploy.zip .
 
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: clipai
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: src/backend/clipai-deploy.zip
+        run: |
+          HTTP=$(curl -s -o /tmp/deploy-response.txt -w "%{http_code}" \
+            -X POST \
+            -u "${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PWD }}" \
+            -H "Content-Type: application/zip" \
+            "https://clipai.scm.azurewebsites.net/api/zipdeploy" \
+            --data-binary @src/backend/clipai-deploy.zip)
+          cat /tmp/deploy-response.txt
+          echo "HTTP status: $HTTP"
+          [ "$HTTP" = "200" ] || exit 1
