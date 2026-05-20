@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT platform FROM social_tokens ORDER BY connected_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "platform",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | PRIMARY_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 80
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ac6ec54d37d374bf3a597c7eb234e9248e734c94e1f40421c90f36d16739127a"
+}

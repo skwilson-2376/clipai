@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO user_logs (id, event, name, email, plan, ip) VALUES (?, 'signup_free', ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "42ffcc93cf547a6551a4508750e4491e1b3d8715022c13d26efec8546ef0a189"
+}

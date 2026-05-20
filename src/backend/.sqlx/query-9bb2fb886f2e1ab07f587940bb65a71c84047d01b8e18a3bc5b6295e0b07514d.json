@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n        INSERT INTO social_tokens\n          (platform, access_token, refresh_token, token_type, scope, expires_at, platform_user_id)\n        VALUES (?, ?, ?, ?, ?, ?, ?)\n        ON DUPLICATE KEY UPDATE\n          access_token   = VALUES(access_token),\n          refresh_token  = VALUES(refresh_token),\n          token_type     = VALUES(token_type),\n          scope          = VALUES(scope),\n          expires_at     = VALUES(expires_at),\n          platform_user_id = VALUES(platform_user_id),\n          updated_at     = CURRENT_TIMESTAMP\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "9bb2fb886f2e1ab07f587940bb65a71c84047d01b8e18a3bc5b6295e0b07514d"
+}

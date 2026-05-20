@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "DELETE FROM social_tokens WHERE platform = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "23e0c6ee543ecba708c06df432d1cefd1600097d20df1895afb2e32c0de2b80e"
+}

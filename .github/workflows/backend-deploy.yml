@@ -35,6 +35,8 @@ jobs:
 
       - name: Build release binary
         run: cargo build --release --target x86_64-unknown-linux-gnu
+        env:
+          SQLX_OFFLINE: "true"
 
       - name: Package for deployment
         run: |
