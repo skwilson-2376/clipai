@@ -50,7 +50,7 @@ jobs:
         run: |
           HTTP=$(curl -s -o /tmp/deploy-response.txt -w "%{http_code}" \
             -X POST \
-            -u "${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PWD }}" \
+            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PWD }}' \
             -H "Content-Type: application/zip" \
             "https://clipai.scm.azurewebsites.net/api/zipdeploy" \
             --data-binary @clipai-deploy.zip)
