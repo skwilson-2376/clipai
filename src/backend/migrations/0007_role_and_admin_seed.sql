@@ -1,5 +1,5 @@
 -- Add role column to users table
-ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user';
 
 -- Seed admin account (password: 12345678, SHA-256 hashed)
 -- Uses INSERT IGNORE so re-running this migration is safe
