@@ -47,6 +47,8 @@ jobs:
           cp target/x86_64-unknown-linux-musl/release/clipai-backend deploy/
           cp -r migrations deploy/
           chmod +x deploy/clipai-backend
+          printf '#!/bin/bash\nfuser -k 8080/tcp 2>/dev/null || true\nexec /home/site/wwwroot/clipai-backend\n' > deploy/startup.sh
+          chmod +x deploy/startup.sh
           cd deploy && zip -r ../clipai-deploy.zip .
 
       - name: Deploy to Azure App Service
