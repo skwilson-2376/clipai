@@ -53,7 +53,7 @@ jobs:
             -u "${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PWD }}" \
             -H "Content-Type: application/zip" \
             "https://clipai.scm.azurewebsites.net/api/zipdeploy" \
-            --data-binary @src/backend/clipai-deploy.zip)
+            --data-binary @clipai-deploy.zip)
           cat /tmp/deploy-response.txt
           echo "HTTP status: $HTTP"
           [ "$HTTP" = "200" ] || exit 1
