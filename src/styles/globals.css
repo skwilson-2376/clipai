@@ -9,25 +9,25 @@
 
 :root {
   /* ── Backgrounds ──────────────────────────── */
-  --bg:        #162030;   /* deep ocean mid      */
-  --surface:   #0D1720;   /* dark navy panel     */
-  --surface2:  #132030;   /* mid navy            */
-  --surface3:  #1A2A38;   /* lighter panel       */
+  --bg:        #2A3D52;   /* medium steel blue   */
+  --surface:   #223448;   /* panel               */
+  --surface2:  #2E4458;   /* mid panel           */
+  --surface3:  #354E65;   /* lighter panel       */
 
   /* ── Borders ─────────────────────────────── */
-  --border:    #1E3040;
-  --border2:   #2A3F52;
+  --border:    #3A566E;
+  --border2:   #4A6880;
 
   /* ── Accent colours ──────────────────────── */
   --accent:     #7AABB8;   /* silver-teal metallic */
   --accent-mid: #94BDC8;   /* lighter silver-teal  */
   --accent2:    #5A7048;   /* dark olive metallic  */
-  --accent3:    #3D6578;   /* deep sea teal        */
+  --accent3:    #5A8FA8;   /* deep sea teal        */
 
   /* ── Text ────────────────────────────────── */
-  --text:        #C8D8E4;  /* silver-white        */
-  --text-muted:  #6A8898;  /* muted silver-blue   */
-  --text-faint:  #3A5265;  /* faint blue-grey     */
+  --text:        #DCE8F0;  /* silver-white        */
+  --text-muted:  #8AAABB;  /* muted silver-blue   */
+  --text-faint:  #5A7A8E;  /* faint blue-grey     */
 
   /* ── Pill / tag ─────────────────────────── */
   --pill-bg:     rgba(122, 171, 184, 0.12);
